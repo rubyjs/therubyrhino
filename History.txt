@@ -1,0 +1,5 @@
+=== 1.72.0 2009-09-24
+
+* 2 major enhancements:
+  * evaluate javascript in jruby
+  * embed callable ruby objects in javascript
