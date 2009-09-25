@@ -34,7 +34,7 @@ Rhino::Context.open do |context|
 end
 == REQUIREMENTS:
 
-* JRuby >= 1.3.1
+* JRuby >= 1.3.0
 
 == INSTALL:
 
