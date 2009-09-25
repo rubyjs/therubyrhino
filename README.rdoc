@@ -14,7 +14,9 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
 == SYNOPSIS:
 
 1) Javascript goes into Ruby
+
 2) Ruby Objects goes into Javascript
+
 3) Our shark's in the Javascript!
 
 include Rhino
