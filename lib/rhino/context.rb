@@ -10,7 +10,7 @@ module Rhino
       private :new
     end    
     
-    def initialize(native)
+    def initialize(native) #:nodoc:
       @native = native
     end
     
