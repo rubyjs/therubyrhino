@@ -10,7 +10,9 @@ Hoe.plugin :newgem
 # Run 'rake -T' to see list of generated tasks (from gem root directory)
 $hoe = Hoe.spec 'therubyrhino' do
   self.developer 'Charles Lowell', 'cowboyd@thefrontside.net'
-  self.rubyforge_name       = self.name 
+  self.rubyforge_name   = self.name 
+  self.summary          = "Embed the Rhino Javascript engine into JRuby"
+
   self.spec_extras['platform'] = 'jruby' # JRuby gem created, e.g. therubyrhino-X.Y.Z-jruby.gem
 end
 
