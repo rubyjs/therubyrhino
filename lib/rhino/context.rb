@@ -7,22 +7,45 @@ module Rhino
   class Context
 
     class << self
+      def open
+        J::ContextFactory.new.call do |native|
+          yield new(native)
+        end
+      end
+      
+      def to_scriptable(object)
+        case object
+        when NativeObject then object.j
+        when J::Scriptable then object
+        else
+          #wrap ruby object into ScriptableRubyObject
+        end
+      end  
+      
+      def to_ruby(object)
+        object.class <= J::Scriptable ? NativeObject.new(object) : object
+      end
+          
       private :new
     end    
     
     def initialize(native) #:nodoc:
       @native = native
     end
-    
-    def self.open
-      J::ContextFactory.new.call do |native|
-        yield new(native)
+        
+    def init_standard_objects(options = {})
+      NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true)).tap do |objects|
+        unless options[:java]
+          for package in ["Packages", "java", "org", "com"]
+            objects.j.delete(package)
+          end
+        end
       end
     end
     
     def evaljs(str, scope = @native.initStandardObjects())
       begin
-        @native.evaluateString(scope, str, "<eval>", 1, nil)
+        Context.to_ruby(@native.evaluateString(Context.to_scriptable(scope), str, "<eval>", 1, nil))
       rescue J::RhinoException => e
         raise Rhino::RhinoError, e
       end
@@ -33,7 +56,7 @@ module Rhino
     end
     
   end
-  
+    
   class Function < J::BaseFunction
     def initialize(&block)
       @block = block
@@ -55,7 +78,7 @@ module Rhino
     end
     
     def javascript_backtrace
-      @native.script_stack_trace
+      @native.getScriptStackTrace()
     end        
   end
 end
