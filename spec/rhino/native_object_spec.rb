@@ -28,4 +28,13 @@ describe Rhino::NativeObject do
     @o[:foo].should be_nil
   end
   
+  describe Enumerable do
+    it "enumerates according to native keys and values" do
+      @j.put("foo", @j, 'bar')
+      @j.put("bang", @j, 'baz')
+      @j.put(5, @j, 'flip')
+      @o.inject({}) {|i,p| k,v = p; i.tap {i[k] = v}}.should == {"foo" => 'bar', "bang" => 'baz', 5 => 'flip'}
+    end
+  end
+  
 end

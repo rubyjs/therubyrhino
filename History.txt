@@ -1,3 +1,8 @@
+=== 1.72.1 2009-10-XX
+* N major enhancements:
+  * easily manipulate javascript objects from ruby (NativeObject)
+  * make NativeObject Enumerable
+
 === 1.72.0 2009-09-24
 
 * 2 major enhancements:
