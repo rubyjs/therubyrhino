@@ -13,19 +13,12 @@ module Rhino
         end
       end
       
-      def to_scriptable(object)
-        case object
-        when NativeObject then object.j
-        when J::Scriptable then object
-        else
-          #wrap ruby object into ScriptableRubyObject
+      def open_std(options = {})
+        open do |cxt|
+          yield cxt, cxt.init_standard_objects(options)
         end
-      end  
-      
-      def to_ruby(object)
-        object.class <= J::Scriptable ? NativeObject.new(object) : object
       end
-          
+                
       private :new
     end    
     
@@ -45,7 +38,7 @@ module Rhino
     
     def evaljs(str, scope = @native.initStandardObjects())
       begin
-        Context.to_ruby(@native.evaluateString(Context.to_scriptable(scope), str, "<eval>", 1, nil))
+        To.ruby @native.evaluateString(To.javascript(scope), str, "<eval>", 1, nil)
       rescue J::RhinoException => e
         raise Rhino::RhinoError, e
       end

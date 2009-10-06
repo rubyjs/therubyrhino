@@ -50,6 +50,11 @@ describe Rhino::Context do
           lambda {
             cxt.evaljs("Object.foop = 'blort'", scope)            
           }.should raise_error(Rhino::RhinoError)
+          
+          lambda {
+            cxt.evaljs("Object.prototype.toString = function() {}", scope)            
+          }.should raise_error(Rhino::RhinoError)
+          
         end
       end
     end
@@ -61,6 +66,15 @@ describe Rhino::Context do
         end
       end
     end
+    
+    it "provides a convenience method for initializing scopes" do
+      Context.open_std(:sealed => true, :java => true) do |cxt, scope|
+        scope["Object"].should_not be_nil
+        scope["java"].should_not be_nil
+        cxt.evaljs("new java.lang.String('foo')", scope).should == "foo"
+      end
+    end
+    
   end
   
   

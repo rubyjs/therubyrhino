@@ -9,9 +9,7 @@ module Rhino
     end
     
     def [](k)
-      if v = @j.get(k.to_s,@j)
-        v == J::Scriptable::NOT_FOUND ? nil : Context.to_ruby(v)
-      end
+      To.ruby @j.get(k.to_s, @j)
     end
     
     def []=(k,v)

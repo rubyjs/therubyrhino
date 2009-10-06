@@ -6,5 +6,6 @@ module Rhino
   VERSION = '1.72.0'
   require 'rhino/java'
   require 'rhino/context'
+  require 'rhino/wormhole'
   require 'rhino/native_object'
 end
