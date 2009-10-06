@@ -18,7 +18,7 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
 1. Our shark's in the Javascript!
 
 
-
+  include Rhino
 # evaluate some simple javascript
 
   Rhino::Context.open do |context|
@@ -26,16 +26,24 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
   end
 
 # evaluate a ruby function from javascript
-
-  include Rhino
   
   Rhino::Context.open do |context|
-    context.standard do |scope|
-      scope.put("say", scope, function {|word, times| word * times})
-      context.evaljs("say("Hello", 3)") #=> HelloHelloHello
-    end
+    scope = context.init_standard_objects
+    scope["say"] = function {|word, times| word * times}
+    context.evaljs("say("Hello", 3)") #=> HelloHelloHello
   end
-  
+
+# Configure your embedding setup
+
+  Rhino::Context.open do |context|
+    # Make your standard objects (Object, String, etc...) immutable
+    scope = context.init_standard_objects(:sealed => true)
+    context.evaljs("Object.prototype.toString = function() {}") # this is an error!
+    
+    #Turn on Java integration from javascript (probably a bad idea)
+    scope = context.init_standard_objects(:java => true)
+    context.evaljs("java.lang.System.exit()") #it's dangerous!
+  end
 == REQUIREMENTS:
 
 * JRuby >= 1.3.0
