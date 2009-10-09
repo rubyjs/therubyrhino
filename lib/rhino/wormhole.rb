@@ -1,11 +1,13 @@
 
 module Rhino
-  module To    
+  module To        
+    JS_UNDEF = [J::Scriptable::NOT_FOUND, J::Undefined]
+    
     def ruby(object)
       case object
-      when J::Scriptable::NOT_FOUND then nil
-      when J::Wrapper               then object.unwrap
-      when J::Scriptable            then NativeObject.new(object)
+      when *JS_UNDEF      then nil
+      when J::Wrapper     then object.unwrap
+      when J::Scriptable  then NativeObject.new(object)
       else  object
       end        
     end

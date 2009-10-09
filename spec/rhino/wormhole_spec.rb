@@ -33,6 +33,10 @@ describe Rhino::To do
         end
       end
     end
+    
+    it "converts javascript undefined into nil" do
+      To.ruby(J::Undefined.instance).should be_nil
+    end
   end
   
   describe  "javascript translation" do
