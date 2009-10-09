@@ -10,7 +10,7 @@ describe Rhino::Context do
     end
   end
   
-  it "can embed ruby object into javascript" do
+  it "can embed primitive ruby object into javascript" do
     Context.open do |cxt|
       cxt.init_standard_objects.tap do |scope|
         scope["foo"] = "Hello World"
@@ -73,8 +73,7 @@ describe Rhino::Context do
         scope["java"].should_not be_nil
         cxt.evaljs("new java.lang.String('foo')", scope).should == "foo"
       end
-    end
-    
+    end    
   end
   
   
