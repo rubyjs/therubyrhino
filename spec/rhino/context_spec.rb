@@ -6,7 +6,13 @@ describe Rhino::Context do
   
   it "can evaluate some javascript" do
     Context.open do |cxt|
-      cxt.evaljs("5 + 3").should == 8
+      cxt.eval("5 + 3").should == 8
+    end
+  end
+  
+  it "treats nil and the empty string as the same thing when it comes to eval" do
+    Context.open do |cxt|
+      cxt.eval(nil).should == cxt.eval('')
     end
   end
   
@@ -14,7 +20,7 @@ describe Rhino::Context do
     Context.open do |cxt|
       cxt.init_standard_objects.tap do |scope|
         scope["foo"] = "Hello World"
-        cxt.evaljs("foo", scope).should == "Hello World"
+        cxt.eval("foo", scope).should == "Hello World"
       end
     end
   end  
@@ -38,7 +44,7 @@ describe Rhino::Context do
     it "provides unsealed standard object by default" do
       Context.open do |cxt|
         cxt.init_standard_objects.tap do |scope|
-          cxt.evaljs("Object.foop = 'blort'", scope)
+          cxt.eval("Object.foop = 'blort'", scope)
           scope["Object"]['foop'].should == 'blort'
         end
       end
@@ -48,11 +54,11 @@ describe Rhino::Context do
       Context.open do |cxt|
         cxt.init_standard_objects(:sealed => true).tap do |scope|
           lambda {
-            cxt.evaljs("Object.foop = 'blort'", scope)            
+            cxt.eval("Object.foop = 'blort'", scope)            
           }.should raise_error(Rhino::RhinoError)
           
           lambda {
-            cxt.evaljs("Object.prototype.toString = function() {}", scope)            
+            cxt.eval("Object.prototype.toString = function() {}", scope)            
           }.should raise_error(Rhino::RhinoError)
           
         end
@@ -71,7 +77,7 @@ describe Rhino::Context do
       Context.open_std(:sealed => true, :java => true) do |cxt, scope|
         scope["Object"].should_not be_nil
         scope["java"].should_not be_nil
-        cxt.evaljs("new java.lang.String('foo')", scope).should == "foo"
+        cxt.eval("new java.lang.String('foo')", scope).should == "foo"
       end
     end    
   end
@@ -81,7 +87,7 @@ describe Rhino::Context do
     Context.open do |cxt|
       cxt.standard do |scope|
         scope.put("say", scope, function {|word, times| word * times})
-        cxt.evaljs("say('Hello',2)", scope).should == "HelloHello"
+        cxt.eval("say('Hello',2)", scope).should == "HelloHello"
       end
     end
   end

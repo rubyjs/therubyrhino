@@ -36,7 +36,8 @@ module Rhino
       end
     end
     
-    def evaljs(str, scope = @native.initStandardObjects())
+    def eval(str, scope = @native.initStandardObjects())
+      str = str.to_s
       begin
         To.ruby @native.evaluateString(To.javascript(scope), str, "<eval>", 1, nil)
       rescue J::RhinoException => e

@@ -2,6 +2,7 @@
 * N major enhancements:
   * easily manipulate javascript objects from ruby (NativeObject)
   * make NativeObject Enumerable
+  * to_h and to_json for NativeObject
 
 === 1.72.0 2009-09-24
 
