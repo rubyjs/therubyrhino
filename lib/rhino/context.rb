@@ -52,12 +52,17 @@ module Rhino
   end
     
   class Function < J::BaseFunction
-    def initialize(&block)
-      @block = block
+    def initialize(callable = nil, &block)
+      super()
+      @block = callable || block
     end
     
     def call(cxt, scope, this, args)
-      @block.call(*args)
+      @block.call(*(args.map {|a| To.ruby(a)}))
+    end
+    
+    def to_json(*args)
+      '"[Native Function]"'
     end
   end
     
@@ -67,8 +72,8 @@ module Rhino
       @native = native
     end
     
-    def message
-      @native.message
+    def message      
+      @native.cause.details
     end
     
     def javascript_backtrace

@@ -3,6 +3,7 @@
   * easily manipulate javascript objects from ruby (NativeObject)
   * make NativeObject Enumerable
   * to_h and to_json for NativeObject
+  * embed ruby instances and call methods from javascript
 
 === 1.72.0 2009-09-24
 

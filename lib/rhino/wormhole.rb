@@ -5,9 +5,10 @@ module Rhino
     
     def ruby(object)
       case object
-      when *JS_UNDEF      then nil
-      when J::Wrapper     then object.unwrap
-      when J::Scriptable  then NativeObject.new(object)
+      when *JS_UNDEF          then nil
+      when Rhino::RubyObject  then object
+      when J::Wrapper         then object.unwrap
+      when J::Scriptable      then NativeObject.new(object)
       else  object
       end        
     end
@@ -16,6 +17,7 @@ module Rhino
       case object
       when NativeObject then object.j
       when J::Scriptable then object
+      else RubyObject.new(object)
       end
     end
     

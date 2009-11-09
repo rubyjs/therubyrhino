@@ -13,7 +13,7 @@ module Rhino
     end
     
     def []=(k,v)
-      @j.put(k.to_s,@j,v)
+      @j.put(k.to_s,@j,To.javascript(v))
     end
     
     def each

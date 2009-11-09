@@ -51,6 +51,24 @@ describe Rhino::To do
         To.javascript(o).should be(o)
       end
     end
-    
+
+    it "creates a prototype for the object based on its class" do
+      Class.new.tap do |c|
+        c.class_eval do
+          def foo(one, two)
+            "1: #{one}, 2: #{two}"
+          end
+        end
+
+        To.javascript(c.new).tap do |o|
+          o.should be_kind_of(RubyObject)
+          o.prototype.tap do |p|
+            p.should_not be_nil
+            p.get("foo", p).should_not be_nil
+            p.get("toString", p).should_not be_nil
+          end
+        end
+      end
+    end    
   end
 end
