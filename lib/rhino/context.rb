@@ -1,5 +1,4 @@
 module Rhino
-  
   def function(&impl)
     Function.new &impl
   end
@@ -8,7 +7,7 @@ module Rhino
 
     class << self
       def open
-        J::ContextFactory.new.call do |native|
+        ContextFactory.new.call do |native|
           yield new(native)
         end
       end
@@ -45,6 +44,11 @@ module Rhino
       end
     end
     
+    def instruction_limit=(limit)
+      @native.setInstructionObserverThreshold(limit);
+      @native.factory.instruction_limit = limit
+    end
+    
     def standard
       yield @native.initStandardObjects()
     end
@@ -65,6 +69,17 @@ module Rhino
       '"[Native Function]"'
     end
   end
+  
+  class ContextFactory < J::ContextFactory
+    
+    def observeInstructionCount(cxt, count)
+      raise RunawayScriptError, "script exceeded allowable instruction count" if count > @limit
+    end
+        
+    def instruction_limit=(count)
+      @limit = count
+    end
+  end
     
     
   class RhinoError < StandardError
@@ -80,4 +95,6 @@ module Rhino
       @native.getScriptStackTrace()
     end        
   end
+  
+  class RunawayScriptError < StandardError; end
 end

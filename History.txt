@@ -1,5 +1,9 @@
-=== 1.72.1 2009-10-XX
-* N major enhancements:
+=== 1.72.2 2009-11-10
+* 1 major enhancement:
+  * ability to limit the instruction count for a context
+
+=== 1.72.1 2009-11-09
+* 4 major enhancements:
   * easily manipulate javascript objects from ruby (NativeObject)
   * make NativeObject Enumerable
   * to_h and to_json for NativeObject

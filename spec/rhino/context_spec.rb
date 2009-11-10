@@ -20,7 +20,7 @@ describe Rhino::Context do
     Context.open do |cxt|
       cxt.init_standard_objects.tap do |scope|
         scope["foo"] = "Hello World"
-        cxt.eval("foo", scope).should == "Hello World"
+        cxt.eval("foo", scope).unwrap.should == "Hello World"
       end
     end
   end  
@@ -90,6 +90,17 @@ describe Rhino::Context do
         cxt.eval("say('Hello',2)", scope).should == "HelloHello"
       end
     end
+  end
+  
+  it "can limit the number of instructions that are executed in the context" do
+    lambda {
+      Context.open_std do |cxt, scope|
+        cxt.instruction_limit = 100 * 1000
+        timeout(1) do
+          cxt.eval('while (true);')
+        end
+      end
+    }.should raise_error(Rhino::RunawayScriptError)
   end
     
   it "has a private constructor" do
