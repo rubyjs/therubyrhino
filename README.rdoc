@@ -17,8 +17,6 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
 1. Ruby Objects goes into Javascript
 1. Our shark's in the Javascript!
 
-
-  include Rhino
 # evaluate some simple javascript
 
   Rhino::Context.open do |context|
