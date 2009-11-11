@@ -6,7 +6,6 @@ module Rhino
     def ruby(object)
       case object
       when *JS_UNDEF          then nil
-      when Rhino::RubyObject  then object
       when J::Wrapper         then object.unwrap
       when J::Scriptable      then NativeObject.new(object)
       else  object

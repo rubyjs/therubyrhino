@@ -18,66 +18,47 @@ describe Rhino::Context do
   
   it "can embed primitive ruby object into javascript" do
     Context.open do |cxt|
-      cxt.init_standard_objects.tap do |scope|
-        scope["foo"] = "Hello World"
-        cxt.eval("foo", scope).unwrap.should == "Hello World"
-      end
+      cxt['foo'] = "Hello World"
+      cxt.eval("foo").should == "Hello World"
     end
   end  
   
   describe "Initalizing Standard Javascript Objects" do
     it "provides the standard objects without java integration by default" do
       Context.open do |cxt|
-        cxt.init_standard_objects.tap do |scope|
-          scope["Object"].should_not be_nil
-          scope["Math"].should_not be_nil
-          scope["String"].should_not be_nil
-          scope["Function"].should_not be_nil
-          scope["Packages"].should be_nil
-          scope["java"].should be_nil
-          scope["org"].should be_nil
-          scope["com"].should be_nil
-        end
+        cxt["Object"].should_not be_nil
+        cxt["Math"].should_not be_nil
+        cxt["String"].should_not be_nil
+        cxt["Function"].should_not be_nil
+        cxt["Packages"].should be_nil
+        cxt["java"].should be_nil
+        cxt["org"].should be_nil
+        cxt["com"].should be_nil
       end
     end
     
     it "provides unsealed standard object by default" do
       Context.open do |cxt|
-        cxt.init_standard_objects.tap do |scope|
-          cxt.eval("Object.foop = 'blort'", scope)
-          scope["Object"]['foop'].should == 'blort'
-        end
+        cxt.eval("Object.foop = 'blort'")
+        cxt["Object"]['foop'].should == 'blort'
       end
     end
     
     it "allows you to seal the standard objects so that they cannot be modified" do
-      Context.open do |cxt|
-        cxt.init_standard_objects(:sealed => true).tap do |scope|
-          lambda {
-            cxt.eval("Object.foop = 'blort'", scope)            
-          }.should raise_error(Rhino::RhinoError)
-          
-          lambda {
-            cxt.eval("Object.prototype.toString = function() {}", scope)            
-          }.should raise_error(Rhino::RhinoError)
-          
-        end
+      Context.open(:sealed => true) do |cxt|
+        lambda {
+          cxt.eval("Object.foop = 'blort'")            
+        }.should raise_error(Rhino::RhinoError)
+        
+        lambda {
+          cxt.eval("Object.prototype.toString = function() {}")            
+        }.should raise_error(Rhino::RhinoError)          
       end
     end
     
     it "allows java integration to be turned on when initializing standard objects" do
-      Context.open do |cxt|
-        cxt.init_standard_objects(:java => true).tap do |scope|
-          scope["Packages"].should_not be_nil
-        end
-      end
-    end
-    
-    it "provides a convenience method for initializing scopes" do
-      Context.open_std(:sealed => true, :java => true) do |cxt, scope|
-        scope["Object"].should_not be_nil
-        scope["java"].should_not be_nil
-        cxt.eval("new java.lang.String('foo')", scope).should == "foo"
+      Context.open(:java => true) do |cxt|
+          cxt["Packages"].should_not be_nil
       end
     end    
   end
@@ -85,16 +66,14 @@ describe Rhino::Context do
   
   it "can call ruby functions from javascript" do
     Context.open do |cxt|
-      cxt.standard do |scope|
-        scope.put("say", scope, function {|word, times| word * times})
-        cxt.eval("say('Hello',2)", scope).should == "HelloHello"
-      end
+      cxt["say"] = function {|word, times| word * times}
+      cxt.eval("say('Hello',2)").should == "HelloHello"
     end
   end
   
   it "can limit the number of instructions that are executed in the context" do
     lambda {
-      Context.open_std do |cxt, scope|
+      Context.open do |cxt|
         cxt.instruction_limit = 100 * 1000
         timeout(1) do
           cxt.eval('while (true);')

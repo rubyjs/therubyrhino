@@ -19,9 +19,9 @@ describe Rhino::NativeObject do
   
   it "doesn't matter if you use a symbol or a string to set a value" do
     @o[:foo] = "bar"
-    @o['foo'].unwrap.should == "bar"
+    @o['foo'].should == "bar"
     @o['baz'] = "bang"
-    @o[:baz].unwrap.should == "bang"
+    @o[:baz].should == "bang"
   end
   
   it "returns nil when the value is null, null, or not defined" do

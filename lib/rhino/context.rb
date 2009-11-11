@@ -4,41 +4,41 @@ module Rhino
   end
   
   class Context
+    
+    attr_reader :scope
 
     class << self
-      def open
+      def open(options = {})
         ContextFactory.new.call do |native|
-          yield new(native)
+          yield new(native, options)
         end
       end
-      
-      def open_std(options = {})
-        open do |cxt|
-          yield cxt, cxt.init_standard_objects(options)
-        end
-      end
-                
+                      
       private :new
     end    
     
-    def initialize(native) #:nodoc:
+    def initialize(native, options) #:nodoc:
       @native = native
-    end
-        
-    def init_standard_objects(options = {})
-      NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true)).tap do |objects|
-        unless options[:java]
-          for package in ["Packages", "java", "org", "com"]
-            objects.j.delete(package)
-          end
+      @scope = NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true))
+      unless options[:java]
+        for package in ["Packages", "java", "org", "com"]
+          @scope.j.delete(package)
         end
-      end
+      end      
     end
     
-    def eval(str, scope = @native.initStandardObjects())
+    def [](k)
+      @scope[k]
+    end
+    
+    def []=(k,v)
+      @scope[k] = v
+    end
+                            
+    def eval(str)
       str = str.to_s
       begin
-        To.ruby @native.evaluateString(To.javascript(scope), str, "<eval>", 1, nil)
+        To.ruby @native.evaluateString(@scope.j, str, "<eval>", 1, nil)
       rescue J::RhinoException => e
         raise Rhino::RhinoError, e
       end
@@ -48,11 +48,7 @@ module Rhino
       @native.setInstructionObserverThreshold(limit);
       @native.factory.instruction_limit = limit
     end
-    
-    def standard
-      yield @native.initStandardObjects()
-    end
-    
+        
   end
     
   class Function < J::BaseFunction
