@@ -17,13 +17,7 @@ module Rhino
     end
     
     def getPrototype()
-      @prototype ||= J::NativeObject.new.tap do |p|
-        p.put("toString", p, Function.new {to_s})
-        for name in @ruby.public_methods(false).reject {|m| m == 'initialize'}
-          method = @ruby.method(name)                    
-          p.put(name.gsub(/_(\w)/) {$1.upcase}, p, Function.new(method) {})
-        end
-      end
+      Prototype::Generic
     end
     
     def to_s
@@ -31,5 +25,27 @@ module Rhino
     end
     
     alias_method :prototype, :getPrototype
+    
+    
+    class Prototype < J::ScriptableObject
+            
+      def get(name, start)
+        robject = To.ruby(start)
+        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}
+        if (robject.public_methods(false).include?(rb_name)) 
+          method = robject.method(rb_name)
+          RubyFunction.new(method)
+        else
+          super(name, start)
+        end
+      end
+      
+      def has(name, start)
+        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}
+        To.ruby(start).public_methods(false).respond_to?(rb_name) ? true : super(name,start)
+      end
+      
+      Generic = new                        
+    end
   end
 end

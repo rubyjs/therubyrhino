@@ -1,10 +1,6 @@
 module Rhino
-  def function(&impl)
-    Function.new &impl
-  end
-  
-  class Context
-    
+
+  class Context    
     attr_reader :scope
 
     class << self
@@ -50,22 +46,7 @@ module Rhino
     end
         
   end
-    
-  class Function < J::BaseFunction
-    def initialize(callable = nil, &block)
-      super()
-      @block = callable || block
-    end
-    
-    def call(cxt, scope, this, args)
-      @block.call(*(args.map {|a| To.ruby(a)}))
-    end
-    
-    def to_json(*args)
-      '"[Native Function]"'
-    end
-  end
-  
+      
   class ContextFactory < J::ContextFactory
     
     def observeInstructionCount(cxt, count)

@@ -12,7 +12,7 @@ describe Rhino::NativeObject do
   
   it "wraps a native javascript object" do
     @o["foo"] = 'bar'
-    @j.get("foo", @j).unwrap.should == "bar"    
+    @j.get("foo", @j).should == "bar"    
     @j.put("blue",@j, "blam")
     @o["blue"].should == "blam"
   end
