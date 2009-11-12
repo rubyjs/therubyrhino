@@ -5,8 +5,10 @@ Rakefile
 lib/rhino.rb
 lib/rhino/context.rb
 lib/rhino/java.rb
+lib/rhino/native_function.rb
 lib/rhino/native_object.rb
 lib/rhino/rhino-1.7R2.jar
+lib/rhino/ruby_function.rb
 lib/rhino/ruby_object.rb
 lib/rhino/wormhole.rb
 script/console
@@ -14,6 +16,7 @@ script/destroy
 script/generate
 spec/rhino/context_spec.rb
 spec/rhino/native_object_spec.rb
+spec/rhino/ruby_object_spec.rb
 spec/rhino/wormhole_spec.rb
 spec/spec.opts
 spec/spec_helper.rb
