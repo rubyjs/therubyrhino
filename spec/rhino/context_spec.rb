@@ -66,7 +66,7 @@ describe Rhino::Context do
   
   it "can call ruby functions from javascript" do
     Context.open do |cxt|
-      cxt["say"] = function {|word, times| word * times}
+      cxt["say"] = lambda {|word, times| word * times}
       cxt.eval("say('Hello',2)").should == "HelloHello"
     end
   end

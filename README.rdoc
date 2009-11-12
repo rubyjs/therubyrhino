@@ -26,7 +26,7 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
 # evaluate a ruby function from javascript
   
   Rhino::Context.open do |context|
-    context["say"] = function {|word, times| word * times}
+    context["say"] = lambda {|word, times| word * times}
     context.eval("say("Hello", 3)") #=> HelloHelloHello
   end
 

@@ -1,5 +1,11 @@
-=== 1.72.3 2009 11-11
-* 1 major enhancement
+=== 1.72.4 2009-11-12
+* 3 major enhancements:
+  * automatically wrap/unwrap ruby and javascript arrays
+  * automatically convert ruby method objects and Proc objects into javascript functions
+  * Make functions defined in javascript callable from ruby
+  
+=== 1.72.3 2009-11-11
+* 4 major enhancements:
   * greatly simplified interface to context by unifying context and scope
   * remove Context#open_std()
   * remove Context#standard
