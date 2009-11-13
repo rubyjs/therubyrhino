@@ -17,18 +17,40 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
 1. Ruby Objects goes into Javascript
 1. Our shark's in the Javascript!
 
+  require 'rhino'
+  
 # evaluate some simple javascript
-
-  Rhino::Context.open do |context|
-    context.eval("7 * 6") #=> 42
-  end
-
+  eval_js "7 * 6" #=> 42
+  
 # evaluate a ruby function from javascript
   
   Rhino::Context.open do |context|
     context["say"] = lambda {|word, times| word * times}
     context.eval("say("Hello", 3)") #=> HelloHelloHello
   end
+  
+# embed a ruby object into your javascript environment
+
+  class MyMath
+    def plus(lhs, rhs)
+      lhs + rhs
+    end
+  end
+
+  Rhino::Context.open do |context|
+    context["math"] = MyMath.new
+    context.eval("math.plus(20,22)") #=> 42
+  end
+  
+# make a ruby object *be* your javascript environment
+  math = MyMath.new
+  Rhino::Context.open(:with => math) do |context|
+    context.eval("plus(20,22)") #=> 42
+  end
+  
+  #or the equivalent
+  
+  math.eval_js("plus(20,22)")
 
 # Configure your embedding setup
 
