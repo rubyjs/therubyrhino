@@ -15,10 +15,16 @@ module Rhino
     
     def initialize(native, options) #:nodoc:
       @native = native
-      @scope = NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true))
+      @global = NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true))
+      if with = options[:with]
+        @scope = To.javascript(with)
+        @scope.setParentScope(@global.j)
+      else
+        @scope = @global
+      end
       unless options[:java]
         for package in ["Packages", "java", "org", "com"]
-          @scope.j.delete(package)
+          @global.j.delete(package)
         end
       end      
     end
@@ -34,7 +40,9 @@ module Rhino
     def eval(str)
       str = str.to_s
       begin
-        To.ruby @native.evaluateString(@scope.j, str, "<eval>", 1, nil)
+        scope = To.javascript(@scope)
+        result = @native.evaluateString(scope, str, "<eval>", 1, nil)
+        To.ruby result
       rescue J::RhinoException => e
         raise Rhino::RhinoError, e
       end

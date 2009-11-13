@@ -1,3 +1,8 @@
+=== 1.72.5 2009-XX-XX
+* N major enhancements:
+  * evaluate javascript with a ruby object as it's scope using Context#open(:with => object)
+  * add eval_js() method to Object to evaluate in the context of that object
+
 === 1.72.4 2009-11-12
 * 3 major enhancements:
   * automatically wrap/unwrap ruby and javascript arrays

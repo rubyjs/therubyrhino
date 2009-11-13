@@ -27,7 +27,7 @@ module Rhino
     end
     
     def array(native)
-      native.length.times.map {|i| native.get(i,native)}        
+      native.length.times.map {|i| native.get(i,native)}
     end
     
     module_function :ruby, :javascript, :array

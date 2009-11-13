@@ -71,6 +71,42 @@ describe Rhino::Context do
     end
   end
   
+  it "can eval javascript with a given ruby object as the scope." do
+    # pending
+    scope = Class.new.class_eval do
+      def plus(lhs, rhs)
+        lhs + rhs
+      end
+      
+      def minus(lhs, rhs)
+        lhs - rhs
+      end
+      
+      new
+    end
+    
+    Context.open(:with => scope) do |cxt|
+      cxt.eval("plus(1,2)").should == 3
+      cxt.eval("minus(10, 20)").should == -10
+      cxt.eval("this").should be(scope)
+    end    
+  end
+  
+  it "extends object to allow for the arbitrary execution of javascript with any object as the scope" do
+    Class.new.class_eval do
+      
+      def initialize
+        @lhs = 5
+      end
+      
+      def timesfive(rhs)
+        @lhs * rhs     
+      end
+      
+      new.eval_js("timesfive(6)").should == 30
+    end
+  end
+  
   it "can limit the number of instructions that are executed in the context" do
     lambda {
       Context.open do |cxt|

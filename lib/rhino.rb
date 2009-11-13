@@ -5,6 +5,7 @@ $:.unshift(File.dirname(__FILE__)) unless
 module Rhino
   VERSION = '1.72.4'
   require 'rhino/java'
+  require 'rhino/object'
   require 'rhino/context'
   require 'rhino/wormhole'
   require 'rhino/ruby_object'

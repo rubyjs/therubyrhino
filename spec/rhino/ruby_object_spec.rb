@@ -37,7 +37,23 @@ describe Rhino::RubyObject do
     eval("o.to_s").should be_nil
   end
   
-  it "translated camel case properties are enumerated by default, but perl case are not"
+  it "translated camel case properties are enumerated by default, but perl case are not" do
+    class_eval do
+      def foo_bar
+      end
+      
+      def baz_bang        
+      end      
+    end
+    pending "why the hell isn't the return value of getIds() being respected?!?"
+    eval(<<-EOJS).should == ["fooBar,bazBang"]
+    var names = [];
+    for (var p in o) {
+      names.push(p);
+    }
+    names;
+    EOJS
+  end
   
   it "will see a method that appears after the wrapper was first created" do
     Rhino::Context.open do |cxt|
@@ -52,11 +68,13 @@ describe Rhino::RubyObject do
     end
   end
   
-  it "allows you to specify which methods should be treated as properties"
+  it "treats ruby methods that have an arity of 0 as javascript properties by default"
   
+  it "will call ruby accesssor function when setting a property from javascript"  
   
   def eval(str)
     Rhino::Context.open do |cxt|
+      cxt['puts'] = lambda {|o| puts o.inspect}
       cxt['o'] = @instance
       cxt.eval(str)
     end
