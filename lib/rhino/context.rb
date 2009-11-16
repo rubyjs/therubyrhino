@@ -100,7 +100,7 @@ module Rhino
         
   end
       
-  class ContextFactory < J::ContextFactory #:nodoc:
+  class ContextFactory < J::ContextFactory # :nodoc:
     
     def observeInstructionCount(cxt, count)
       raise RunawayScriptError, "script exceeded allowable instruction count" if count > @limit
@@ -112,7 +112,7 @@ module Rhino
   end
     
     
-  class RhinoError < StandardError #:nodoc:
+  class RhinoError < StandardError # :nodoc:
     def initialize(native)
       @native = native
     end
@@ -126,5 +126,6 @@ module Rhino
     end        
   end
   
-  class RunawayScriptError < StandardError; end #:nodoc:
+  class RunawayScriptError < StandardError # :nodoc:
+  end 
 end
