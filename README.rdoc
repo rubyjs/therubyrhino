@@ -71,6 +71,13 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
     context.eval("java.lang.System.exit()") #it's dangerous!
   end
 
+  #limit the number of instructions that can be executed in order to prevent
+  #rogue scripts
+  Rhino::Context.open do |context|
+    context.instruction_limit = 100000
+    context.eval("while (true);") # => Error!
+  end
+
 ==== Different ways of loading javascript source
 
 In addition to just evaluating strings, you can also use streams such as files.
@@ -85,6 +92,35 @@ In addition to just evaluating strings, you can also use streams such as files.
     context.load("mysource.js")
   end
 
+=== Safe by default
+
+The Ruby Rhino is designed to let you evaluate javascript as safely as possible unless you tell it to do something more
+dangerous. The default context is a hermetically sealed javascript environment with only the standard javascript objects
+and functions. Nothing from the ruby world is accessible at all.
+
+For ruby objects that you explicitly embed into javascript, only the +public+ methods *defined in their classes* are
+exposed by default. E.g.
+
+  class A
+    def a
+      "a"
+    end
+  end
+
+  class B < A
+    def b
+      "b"
+    end
+  end
+
+
+  Rhino::Context.open do |cxt|
+    cxt['a'] = A.new
+    cxt['b'] = B.new
+    cxt.eval("a.a()") # => 'a'
+    cxt.eval("b.b()") # => 'b'
+    cxt.eval("b.a()") # => 'TypeError: undefined property 'a' is not a function'
+  end
   
 == REQUIREMENTS:
 
