@@ -27,6 +27,18 @@ describe Rhino::NativeObject do
   it "returns nil when the value is null, null, or not defined" do
     @o[:foo].should be_nil
   end
+
+
+  it "traverses the prototype chain when hash accessing properties from the ruby object" do
+    Rhino::Context.open do |cxt|
+      cxt.eval(<<EOJS)['bar'].should == "baz"
+function Foo() {}
+Foo.prototype.bar = 'baz'
+new Foo()
+EOJS
+    end
+  end
+
   
   describe Enumerable do
     it "enumerates according to native keys and values" do
@@ -35,6 +47,9 @@ describe Rhino::NativeObject do
       @j.put(5, @j, 'flip')
       @o.inject({}) {|i,p| k,v = p; i.tap {i[k] = v}}.should == {"foo" => 'bar', "bang" => 'baz', 5 => 'flip'}
     end
+
+    it "should traverse prototype chain when enumerating keys and values"
+
   end
   
 end

@@ -23,7 +23,7 @@ module Rhino
     #   jsobject['foo'] # => 'bar'
     #   jsobject['Take me to'] # => 'a funky town'
     def [](k)
-      To.ruby @j.get(k.to_s, @j)
+      To.ruby J::ScriptableObject.getProperty(@j,k.to_s)
     end
     
     # set a property on the javascript object, where +k+ is a string or symbol corresponding
@@ -36,7 +36,8 @@ module Rhino
     #   end
 
     def []=(k,v)
-      @j.put(k.to_s,@j,To.javascript(v))
+      #@j.put(k.to_s,@j,To.javascript(v))
+      J::ScriptableObject.putProperty(@j, k.to_s, To.javascript(v))
     end
     
     # enumerate the key value pairs contained in this javascript object. e.g.
