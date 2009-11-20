@@ -92,7 +92,20 @@ module Rhino
         raise Rhino::RhinoError, e
       end
     end
-  
+
+    # Read the contents of <tt>filename</tt> and evaluate it as javascript. Returns the result of evaluating the
+    # javascript. e.g.
+    #
+    # Context.open do |cxt|
+    #   cxt.load("path/to/some/lib.js")
+    # end
+    #
+    def load(filename)
+      File.open(filename) do |file|
+        eval file, filename, 1
+      end
+    end
+
     # Set the maximum number of instructions that this context will execute.
     # If this instruction limit is exceeded, then a Rhino::RunawayScriptError
     # will be raised

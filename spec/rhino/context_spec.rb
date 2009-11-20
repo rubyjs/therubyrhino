@@ -124,7 +124,7 @@ describe Rhino::Context do
     }.should raise_error
   end
 
-  describe "compilation" do
+  describe "loading javascript source into the interpreter" do
 
     it "can take an IO object in the eval method instead of a string" do
       source = StringIO.new(<<-EOJS)
@@ -145,6 +145,17 @@ five();
         cxt.eval(source, "StringIO").should == 5
         cxt['foo'].should == "bar"
       end
+    end
+
+    it "can load a file into the runtime" do
+      mock(:JavascriptSourceFile).tap do |file|
+        File.should_receive(:open).with("path/to/mysource.js").and_yield(file)
+        Context.open do |cxt|
+          cxt.should_receive(:eval).with(file, "path/to/mysource.js", 1)
+          cxt.load("path/to/mysource.js")
+        end
+      end
+
     end
 
   end

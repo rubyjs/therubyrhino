@@ -22,16 +22,13 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
 # evaluate some simple javascript
   eval_js "7 * 6" #=> 42
 
-# evaluate bytes read from any File/IO object:
-  File.open("mysource.js") do |file|
-    eval_js file, "mysource.js"
-
-    #or in the context of a controlled scope
-    Rhino::Context.open do |context|
-      context['foo'] = 'some global variable referenced in mysource.js'
-      context.eval(file, "mysource.js")
+# that's quick and dirty, but if you want more control over your
+# environment, use a Context:
+  Rhino::Context.open do |cxt|
+    cxt['foo'] = "bar"
+    cxt.eval('foo') # => "bar"
   end
-  
+
 # evaluate a ruby function from javascript
   
   Rhino::Context.open do |context|
@@ -73,6 +70,21 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
   Rhino::Context.open(:java => true) do |context|
     context.eval("java.lang.System.exit()") #it's dangerous!
   end
+
+==== Different ways of loading javascript source
+
+In addition to just evaluating strings, you can also use streams such as files.
+
+# evaluate bytes read from any File/IO object:
+  File.open("mysource.js") do |file|
+    eval_js file, "mysource.js"
+  end
+
+# or load it by filename
+  Rhino::Context.open do |context|
+    context.load("mysource.js")
+  end
+
   
 == REQUIREMENTS:
 
