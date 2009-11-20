@@ -21,6 +21,16 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
   
 # evaluate some simple javascript
   eval_js "7 * 6" #=> 42
+
+# evaluate bytes read from any File/IO object:
+  File.open("mysource.js") do |file|
+    eval_js file, "mysource.js"
+
+    #or in the context of a controlled scope
+    Rhino::Context.open do |context|
+      context['foo'] = 'some global variable referenced in mysource.js'
+      context.eval(file, "mysource.js")
+  end
   
 # evaluate a ruby function from javascript
   

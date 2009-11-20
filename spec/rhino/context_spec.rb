@@ -123,4 +123,29 @@ describe Rhino::Context do
       Context.new(nil)
     }.should raise_error
   end
+
+  describe "compilation" do
+
+    it "can take an IO object in the eval method instead of a string" do
+      source = StringIO.new(<<-EOJS)
+/*
+* we want to have a fairly verbose function so that we can be assured tha
+* we overflow the buffer size so that we see that the reader is chunking
+* it's payload in at least several fragments.
+*
+* That's why we're wasting space here
+*/
+function five() {
+  return 5
+}
+foo = 'bar'
+five();
+      EOJS
+      Context.open do |cxt|
+        cxt.eval(source, "StringIO").should == 5
+        cxt['foo'].should == "bar"
+      end
+    end
+
+  end
 end

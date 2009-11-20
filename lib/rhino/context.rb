@@ -76,14 +76,17 @@ module Rhino
     end
 
     # Evaluate a string of javascript in this context:
-    # * <tt>source</tt> - the javascript source code to evaluate
+    # * <tt>source</tt> - the javascript source code to evaluate. This can be either a string or an IO object.
     # * <tt>source_name</tt> - associated name for this source code. Mainly useful for backtraces.
     # * <tt>line_number</tt> - associate this number with the first line of executing source. Mainly useful for backtraces
     def eval(source, source_name = "<eval>", line_number = 1)
-      source = source.to_s
       begin
         scope = To.javascript(@scope)
-        result = @native.evaluateString(scope, source, source_name, line_number, nil)
+        if IO === source || StringIO === source
+          result = @native.evaluateReader(scope, IOReader.new(source), source_name, line_number, nil)
+        else          
+          result = @native.evaluateString(scope, source.to_s, source_name, line_number, nil)
+        end
         To.ruby result
       rescue J::RhinoException => e
         raise Rhino::RhinoError, e
@@ -98,6 +101,30 @@ module Rhino
       @native.factory.instruction_limit = limit
     end
         
+  end
+
+  class IOReader < Java::JavaIo::Reader #:nodoc:
+
+    def initialize(io)
+      @io = io
+    end
+
+    def read(charbuffer, offset, length)
+      begin
+        str = @io.read(length)
+        if str.nil?
+          return -1
+        else
+          jstring = Java::JavaLang::String.new(str)
+          for i in 0 .. jstring.length - 1          
+            charbuffer[i + offset] = jstring.charAt(i)
+          end
+          return jstring.length
+        end
+      rescue  StandardError => e        
+        raise Java::JavaIo::IOException.new, "Failed reading from ruby IO object"
+      end
+    end
   end
       
   class ContextFactory < J::ContextFactory # :nodoc:
