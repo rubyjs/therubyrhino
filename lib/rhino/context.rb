@@ -32,38 +32,37 @@ module Rhino
 # While there are many similarities between Rhino::Context and Java::OrgMozillaJavascript::Context, they are not
 # the same thing and should not be confused.
 
-  class Context    
+  class Context
     attr_reader :scope
 
     class << self
-      
+
       # initalize a new context with a fresh set of standard objects. All operations on the context
       # should be performed in the block that is passed.
       def open(options = {}, &block)
-        ContextFactory.new.call do |native|
-          block.call(new(native, options))
-        end
+        new(options).open(&block)
       end
-                      
-      private :new
-    end    
-    
-    def initialize(native, options) #:nodoc:
-      @native = native
-      @global = NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true))
-      if with = options[:with]
-        @scope = To.javascript(with)
-        @scope.setParentScope(@global.j)
-      else
-        @scope = @global
-      end
-      unless options[:java]
-        for package in ["Packages", "java", "org", "com"]
-          @global.j.delete(package)
-        end
-      end      
+      
     end
-    
+
+    def initialize(options = {}) #:nodoc:
+      ContextFactory.new.call do |native|
+        @native = native
+        @global = NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true))
+        if with = options[:with]
+          @scope = To.javascript(with)
+          @scope.setParentScope(@global.j)
+        else
+          @scope = @global
+        end
+        unless options[:java]
+          for package in ["Packages", "java", "org", "com"]
+            @global.j.delete(package)
+          end
+        end
+      end
+    end
+
     # Read a value from the global scope of this context
     def [](k)
       @scope[k]
@@ -71,7 +70,7 @@ module Rhino
 
     # Set a value in the global scope of this context. This value will be visible to all the 
     # javascript that is executed in this context.    
-    def []=(k,v)
+    def []=(k, v)
       @scope[k] = v
     end
 
@@ -84,13 +83,17 @@ module Rhino
         scope = To.javascript(@scope)
         if IO === source || StringIO === source
           result = @native.evaluateReader(scope, IOReader.new(source), source_name, line_number, nil)
-        else          
+        else
           result = @native.evaluateString(scope, source.to_s, source_name, line_number, nil)
         end
         To.ruby result
       rescue J::RhinoException => e
         raise Rhino::RhinoError, e
-      end
+      end if open?
+    end
+
+    def open?
+      @native == J::Context.getCurrentContext() || (raise ContextError, "context must be open")      
     end
 
     # Read the contents of <tt>filename</tt> and evaluate it as javascript. Returns the result of evaluating the
@@ -113,7 +116,16 @@ module Rhino
       @native.setInstructionObserverThreshold(limit);
       @native.factory.instruction_limit = limit
     end
-        
+
+    def open
+      begin
+        @native.factory.enterContext(@native)
+        yield self
+      ensure
+        J::Context.exit()
+      end if block_given?
+    end
+
   end
 
   class IOReader < Java::JavaIo::Reader #:nodoc:
@@ -129,43 +141,46 @@ module Rhino
           return -1
         else
           jstring = Java::JavaLang::String.new(str)
-          for i in 0 .. jstring.length - 1          
+          for i in 0 .. jstring.length - 1
             charbuffer[i + offset] = jstring.charAt(i)
           end
           return jstring.length
         end
-      rescue  StandardError => e        
+      rescue StandardError => e
         raise Java::JavaIo::IOException.new, "Failed reading from ruby IO object"
       end
     end
   end
-      
+
   class ContextFactory < J::ContextFactory # :nodoc:
-    
+
     def observeInstructionCount(cxt, count)
       raise RunawayScriptError, "script exceeded allowable instruction count" if count > @limit
     end
-        
+
     def instruction_limit=(count)
       @limit = count
     end
   end
+
+  class ContextError < StandardError # :nodoc:
     
-    
+  end
+
   class RhinoError < StandardError # :nodoc:
     def initialize(native)
       @native = native
     end
-    
-    def message      
+
+    def message
       @native.cause.details
     end
-    
+
     def javascript_backtrace
       @native.getScriptStackTrace()
-    end        
+    end
   end
-  
+
   class RunawayScriptError < StandardError # :nodoc:
-  end 
+  end
 end

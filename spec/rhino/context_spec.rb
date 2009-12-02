@@ -21,7 +21,14 @@ describe Rhino::Context do
       cxt['foo'] = "Hello World"
       cxt.eval("foo").should == "Hello World"
     end
-  end  
+  end
+
+
+  it "won't let you do some operations unless the context is open" do
+    Context.new.tap do |closed|
+      lambda {closed.eval('1')}.should raise_error(ContextError)    
+    end
+  end
   
   describe "Initalizing Standard Javascript Objects" do
     it "provides the standard objects without java integration by default" do
