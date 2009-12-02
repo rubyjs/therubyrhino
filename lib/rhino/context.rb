@@ -45,6 +45,10 @@ module Rhino
       
     end
 
+    # Create a new javascript environment for executing javascript and ruby code.
+    # * <tt>:sealed</tt> - if this is true, then the standard objects such as Object, Function, Array will not be able to be modified
+    # * <tt>:with</tt> - use this ruby object as the root scope for all javascript that is evaluated
+    # * <tt>:java</tt> - if true, java packages will be accessible from within javascript
     def initialize(options = {}) #:nodoc:
       ContextFactory.new.call do |native|
         @native = native
@@ -92,10 +96,6 @@ module Rhino
       end if open?
     end
 
-    def open?
-      @native == J::Context.getCurrentContext() || (raise ContextError, "context must be open")      
-    end
-
     # Read the contents of <tt>filename</tt> and evaluate it as javascript. Returns the result of evaluating the
     # javascript. e.g.
     #
@@ -117,6 +117,8 @@ module Rhino
       @native.factory.instruction_limit = limit
     end
 
+    # Enter this context for operations. Some methods such as eval() will
+    # fail unless this context is open
     def open
       begin
         @native.factory.enterContext(@native)
@@ -125,6 +127,13 @@ module Rhino
         J::Context.exit()
       end if block_given?
     end
+
+    private
+
+    def open?
+      @native == J::Context.getCurrentContext() || (raise ContextError, "context must be open")
+    end
+
 
   end
 
