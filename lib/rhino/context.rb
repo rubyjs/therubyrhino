@@ -95,6 +95,10 @@ module Rhino
         raise Rhino::RhinoError, e
       end if open?
     end
+    
+    def evaluate(*args) # :nodoc:
+      self.eval(*args)
+    end
 
     # Read the contents of <tt>filename</tt> and evaluate it as javascript. Returns the result of evaluating the
     # javascript. e.g.
@@ -105,7 +109,7 @@ module Rhino
     #
     def load(filename)
       File.open(filename) do |file|
-        eval file, filename, 1
+        evaluate file, filename, 1
       end
     end
 
