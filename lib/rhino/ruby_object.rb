@@ -21,7 +21,9 @@ module Rhino
     end
     
     def getIds()
-      @ruby.public_methods(false).map {|m| m.gsub(/(.)_(.)/) {"#{$1}#{$2.upcase}"}}.to_java
+      puts "getIds()"
+      require 'java'
+      @ruby.public_methods(false).map {|m| m.gsub(/(.)_(.)/) {::JavaLang::String.new("#{$1}#{$2.upcase}")}}.tap {|ids| puts "ids: #{ids.inspect}"}.to_java
     end
         
     def to_s
@@ -41,7 +43,11 @@ module Rhino
         rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}
         if (robject.public_methods(false).include?(rb_name)) 
           method = robject.method(rb_name)
-          RubyFunction.new(method)
+          if method.arity == 0
+            To.javascript(method.call)
+          else
+            RubyFunction.new(method)
+          end
         else
           super(name, start)
         end
@@ -51,7 +57,7 @@ module Rhino
         rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}
         To.ruby(start).public_methods(false).respond_to?(rb_name) ? true : super(name,start)
       end
-            
+                  
       Generic = new
       
     end
