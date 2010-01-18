@@ -43,6 +43,10 @@ module Rhino
         new(options).open(&block)
       end
       
+      def eval(javascript)
+        new.eval(javascript)
+      end
+      
     end
 
     # Create a new javascript environment for executing javascript and ruby code.
@@ -83,17 +87,19 @@ module Rhino
     # * <tt>source_name</tt> - associated name for this source code. Mainly useful for backtraces.
     # * <tt>line_number</tt> - associate this number with the first line of executing source. Mainly useful for backtraces
     def eval(source, source_name = "<eval>", line_number = 1)
-      begin
-        scope = To.javascript(@scope)
-        if IO === source || StringIO === source
-          result = @native.evaluateReader(scope, IOReader.new(source), source_name, line_number, nil)
-        else
-          result = @native.evaluateString(scope, source.to_s, source_name, line_number, nil)
+      self.open do
+        begin
+          scope = To.javascript(@scope)
+          if IO === source || StringIO === source
+            result = @native.evaluateReader(scope, IOReader.new(source), source_name, line_number, nil)
+          else
+            result = @native.evaluateString(scope, source.to_s, source_name, line_number, nil)
+          end
+          To.ruby result
+        rescue J::RhinoException => e
+          raise Rhino::RhinoError, e
         end
-        To.ruby result
-      rescue J::RhinoException => e
-        raise Rhino::RhinoError, e
-      end if open?
+      end
     end
     
     def evaluate(*args) # :nodoc:
@@ -131,13 +137,6 @@ module Rhino
         J::Context.exit()
       end if block_given?
     end
-
-    private
-
-    def open?
-      @native == J::Context.getCurrentContext() || (raise ContextError, "context must be open")
-    end
-
 
   end
 

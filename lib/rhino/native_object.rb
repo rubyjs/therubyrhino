@@ -36,7 +36,6 @@ module Rhino
     #   end
 
     def []=(k,v)
-      #@j.put(k.to_s,@j,To.javascript(v))
       J::ScriptableObject.putProperty(@j, k.to_s, To.javascript(v))
     end
     
