@@ -97,7 +97,7 @@ module Rhino
           end
           To.ruby result
         rescue J::RhinoException => e
-          raise Rhino::RhinoError, e
+          raise Rhino::JavascriptError, e
         end
       end
     end
@@ -179,7 +179,7 @@ module Rhino
     
   end
 
-  class RhinoError < StandardError # :nodoc:
+  class JavascriptError < StandardError # :nodoc:
     def initialize(native)
       @native = native
     end
