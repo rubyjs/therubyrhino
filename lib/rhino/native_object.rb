@@ -8,8 +8,8 @@ module Rhino
     # be an instance of org.mozilla.javascript.Scriptable
     attr_reader :j
     
-    def initialize(j) # :nodoc:
-      @j = j
+    def initialize(j=nil) # :nodoc:
+      @j = j || J::NativeObject.new
     end
     
     # get a property from this javascript object, where +k+ is a string or symbol
