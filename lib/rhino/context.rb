@@ -64,7 +64,7 @@ module Rhino
           @scope = @global
         end
         unless options[:java]
-          for package in ["Packages", "java", "org", "com"]
+          for package in ["Packages", "java", "javax", "org", "com", "edu", "net"]
             @global.j.delete(package)
           end
         end
