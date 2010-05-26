@@ -57,6 +57,7 @@ module Rhino
     def to_h
       {}.tap do |h|
         each do |k,v|
+          v = To.ruby(v)
           h[k] = self.class === v ? v.to_h : v
         end
       end
