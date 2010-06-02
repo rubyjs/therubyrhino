@@ -1,6 +1,7 @@
 = therubyrhino
 
 * http://github.com/cowboyd/therubyrhino
+* irc://irc.freenode.net/therubyrhino
 
 == DESCRIPTION:
 
