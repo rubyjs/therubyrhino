@@ -15,9 +15,10 @@ lib/rhino/wormhole.rb
 script/console
 script/destroy
 script/generate
+spec/redjs/README.txt
+spec/redjs/jsapi_spec.rb
+spec/redjs_helper.rb
 spec/rhino/context_spec.rb
-spec/rhino/native_object_spec.rb
-spec/rhino/ruby_object_spec.rb
 spec/rhino/wormhole_spec.rb
 spec/spec.opts
 spec/spec_helper.rb
