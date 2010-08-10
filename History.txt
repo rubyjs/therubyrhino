@@ -1,3 +1,7 @@
+=== 1.72.7
+* N major enhancements:
+* N minor enhancements:
+
 === 1.72.6 2009-11-30
 * 2 major enhancements:
   * evaluate an IO object such as a file or an socket input stream
