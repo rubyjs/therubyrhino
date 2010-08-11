@@ -8,6 +8,7 @@ module Rhino
       when *JS_UNDEF          then nil
       when J::Wrapper         then object.unwrap
       when J::NativeArray     then array(object)
+      when J::Regexp::NativeRegExp then object
       when J::Function        then NativeFunction.new(object)
       when J::Scriptable      then NativeObject.new(object)
       else  object

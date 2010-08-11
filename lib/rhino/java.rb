@@ -7,6 +7,10 @@ module Rhino
   #   Rhino::J::NativeObject # => org.mozilla.javascript.NativeObject
   module J
     import "org.mozilla.javascript"
+
+    module Regexp
+      import "org.mozilla.javascript.regexp"
+    end
   end
 end
 
