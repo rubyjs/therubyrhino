@@ -129,6 +129,14 @@ module Rhino
       @native.factory.instruction_limit = limit
     end
 
+    # Set the optimization level that this context will use. This is sometimes necessary
+    # in Rhino, if the bytecode size of the compiled javascript exceeds the 64KB limit.
+    # By using the -1 optimization level, you tell Rhino to run in interpretative mode,
+    # taking a hit to performance but escaping the Java bytecode limit.
+    def optimization_level=(level)
+      @native.setOptimizationLevel(level)
+    end
+
     # Enter this context for operations. Some methods such as eval() will
     # fail unless this context is open
     def open
