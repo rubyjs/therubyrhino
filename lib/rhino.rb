@@ -3,7 +3,7 @@ $:.unshift(File.dirname(__FILE__)) unless
 
 
 module Rhino
-  VERSION = '1.72.7.pre'
+  VERSION = '1.72.7'
   require 'rhino/java'
   require 'rhino/object'
   require 'rhino/context'
