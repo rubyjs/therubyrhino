@@ -53,7 +53,7 @@ describe Rhino::To do
     it "it unwraps wrapped java objects" do
       Context.open do |cx|
         scope = cx.scope
-        Java::JavaLang::String.new("Hello World").tap do |str|
+        java.lang.String.new("Hello World").tap do |str|
           J::NativeJavaObject.new(scope.j, str, str.getClass()).tap do |o|
             To.ruby(o).should == "Hello World"
           end
