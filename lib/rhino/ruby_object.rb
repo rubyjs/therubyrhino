@@ -23,7 +23,7 @@ module Rhino
     def getIds()
       puts "getIds()"
       require 'java'
-      @ruby.public_methods(false).map {|m| m.gsub(/(.)_(.)/) {::JavaLang::String.new("#{$1}#{$2.upcase}")}}.tap {|ids| puts "ids: #{ids.inspect}"}.to_java
+      @ruby.public_methods(false).map {|m| m.gsub(/(.)_(.)/) {java.lang.String.new("#{$1}#{$2.upcase}")}}.tap {|ids| puts "ids: #{ids.inspect}"}.to_java
     end
         
     def to_s
