@@ -31,7 +31,7 @@ module Rhino
 #   end
 #
 # == Notes
-# While there are many similarities between Rhino::Context and Java::OrgMozillaJavascript::Context, they are not
+# While there are many similarities between Rhino::Context and Java::org.mozilla.javascript.Context, they are not
 # the same thing and should not be confused.
 
   class Context
@@ -150,7 +150,7 @@ module Rhino
 
   end
 
-  class IOReader < Java::JavaIo::Reader #:nodoc:
+  class IOReader < java.io.Reader #:nodoc:
 
     def initialize(io)
       @io = io
@@ -162,14 +162,14 @@ module Rhino
         if str.nil?
           return -1
         else
-          jstring = Java::JavaLang::String.new(str)
+          jstring = java.lang.String.new(str)
           for i in 0 .. jstring.length - 1
             charbuffer[i + offset] = jstring.charAt(i)
           end
           return jstring.length
         end
       rescue StandardError => e
-        raise Java::JavaIo::IOException.new, "Failed reading from ruby IO object"
+        raise java.io.IOException.new, "Failed reading from ruby IO object"
       end
     end
   end
