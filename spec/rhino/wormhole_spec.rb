@@ -97,6 +97,13 @@ describe Rhino::To do
         a.get(3,a).should be(4)
       end
     end
+
+    it "converts ruby hashes into native objects" do
+      To.javascript({ :bare => true }).tap do |h|
+        h.should be_kind_of(J::NativeObject)
+        h.get("bare", h).should be(true)
+      end
+    end
     
     it "converts procs and methods into native functions" do
       to(lambda {|lhs,rhs| lhs * rhs}).tap do |f|

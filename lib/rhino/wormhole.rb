@@ -20,6 +20,7 @@ module Rhino
       when String,Numeric       then object
       when TrueClass,FalseClass then object
       when Array                then J::NativeArray.new(object.to_java)
+      when Hash                 then ruby_hash_to_native(object)
       when Proc,Method          then RubyFunction.new(object)
       when NativeObject         then object.j      
       when J::Scriptable        then object
@@ -30,7 +31,17 @@ module Rhino
     def array(native)
       native.length.times.map {|i| ruby(native.get(i,native))}
     end
+
+    def ruby_hash_to_native(ruby_object)
+      native_object = NativeObject.new
+
+      ruby_object.each_pair do |k, v|
+        native_object[k] = v
+      end
+
+      native_object.j
+		end
     
-    module_function :ruby, :javascript, :array
+    module_function :ruby, :javascript, :array, :ruby_hash_to_native
   end
 end
