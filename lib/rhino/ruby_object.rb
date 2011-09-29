@@ -53,7 +53,7 @@ module Rhino
       
       def has(name, start)
         rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}.to_sym
-        To.ruby(start).public_methods(false).collect(&:to_sym).key?(rb_name) ? true : super(name,start)
+        To.ruby(start).public_methods(false).collect(&:to_sym).include?(rb_name) ? true : super(name,start)
       end
                   
       Generic = new
