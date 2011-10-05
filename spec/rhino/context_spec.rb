@@ -25,6 +25,15 @@ describe Rhino::Context do
       end
     end
     
+    it "allows you to scope the context to an object" do
+      class MyScope
+        def foo; proc { 'bar' }; end
+      end
+      Context.open(:with => MyScope.new) do |ctx|
+        ctx.eval("foo()").should == 'bar'
+      end
+    end
+    
     it "allows you to seal the standard objects so that they cannot be modified" do
       Context.open(:sealed => true) do |cxt|
         lambda {

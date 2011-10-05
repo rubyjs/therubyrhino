@@ -38,8 +38,8 @@ module Rhino
         if name == "toString" 
           return RubyFunction.new(lambda { "[Ruby #{robject.class.name}]"})
         end
-        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}
-        if (robject.public_methods(false).include?(rb_name)) 
+        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}.to_sym
+        if (robject.public_methods(false).collect(&:to_sym).include?(rb_name)) 
           method = robject.method(rb_name)
           if method.arity == 0
             To.javascript(method.call)
@@ -52,12 +52,11 @@ module Rhino
       end
       
       def has(name, start)
-        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}
-        To.ruby(start).public_methods(false).respond_to?(rb_name) ? true : super(name,start)
+        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}.to_sym
+        To.ruby(start).public_methods(false).collect(&:to_sym).include?(rb_name) ? true : super(name,start)
       end
                   
       Generic = new
-      
     end
   end
 end
