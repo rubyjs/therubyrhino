@@ -3,6 +3,8 @@ module Rhino
   module To
     JS_UNDEF = [J::Scriptable::NOT_FOUND, J::Undefined]
 
+    module_function
+
     def ruby(object)
       case object
       when *JS_UNDEF                then nil
@@ -10,8 +12,8 @@ module Rhino
       when J::NativeArray           then array(object)
       when J::NativeDate            then Time.at(object.getJSTimeValue() / 1000)
       when J::Regexp::NativeRegExp  then object
-      when J::Function              then NativeFunction.new(object)
-      when J::Scriptable            then NativeObject.new(object)
+      when J::Function              then r2j(object) {|o| NativeFunction.new(o)}
+      when J::Scriptable            then r2j(object) {|o| NativeObject.new(o)}
       else  object
       end
     end
@@ -43,6 +45,19 @@ module Rhino
       native_object.j
 		end
 
-    module_function :ruby, :javascript, :array, :ruby_hash_to_native
+    @@r2j = {}
+
+		def r2j(value)
+      if ref = @@r2j[value.object_id]
+        if peer = ref.get()
+          return peer
+        end
+      else
+        yield(value).tap do |peer|
+          @@r2j[value.object_id] = java.lang.ref.WeakReference.new(peer)
+        end
+      end
+    end
+
   end
 end

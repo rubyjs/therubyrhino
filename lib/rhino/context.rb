@@ -5,23 +5,23 @@ module Rhino
 # ==Overview
 #  All Javascript must be executed in a context which represents the execution environment in
 #  which scripts will run. The environment consists of the standard javascript objects
-#  and functions like Object, String, Array, etc... as well as any objects or functions which 
+#  and functions like Object, String, Array, etc... as well as any objects or functions which
 #  have been defined in it. e.g.
-#  
+#
 #   Context.open do |cxt|
 #     cxt['num'] = 5
 #     cxt.eval('num + 5') #=> 10
 #   end
-# 
+#
 # == Multiple Contexts.
-# The same object may appear in any number of contexts, but only one context may be executing javascript code 
+# The same object may appear in any number of contexts, but only one context may be executing javascript code
 # in any given thread. If a new context is opened in a thread in which a context is already opened, the second
 # context will "mask" the old context e.g.
 #
 #   six = 6
 #   Context.open do |cxt|
 #     cxt['num'] = 5
-#     cxt.eval('num') # => 5     
+#     cxt.eval('num') # => 5
 #     Context.open do |cxt|
 #       cxt['num'] = 10
 #       cxt.eval('num') # => 10
@@ -44,11 +44,11 @@ module Rhino
       def open(options = {}, &block)
         new(options).open(&block)
       end
-      
+
       def eval(javascript)
         new.eval(javascript)
       end
-      
+
     end
 
     # Create a new javascript environment for executing javascript and ruby code.
@@ -78,8 +78,8 @@ module Rhino
       @scope[k]
     end
 
-    # Set a value in the global scope of this context. This value will be visible to all the 
-    # javascript that is executed in this context.    
+    # Set a value in the global scope of this context. This value will be visible to all the
+    # javascript that is executed in this context.
     def []=(k, v)
       @scope[k] = v
     end
@@ -103,7 +103,7 @@ module Rhino
         end
       end
     end
-    
+
     def evaluate(*args) # :nodoc:
       self.eval(*args)
     end
@@ -186,7 +186,7 @@ module Rhino
   end
 
   class ContextError < StandardError # :nodoc:
-    
+
   end
 
   class JavascriptError < StandardError # :nodoc:
@@ -202,6 +202,8 @@ module Rhino
       @native.getScriptStackTrace()
     end
   end
+
+  JSError = JavascriptError
 
   class RunawayScriptError < StandardError # :nodoc:
   end
