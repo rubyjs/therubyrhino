@@ -12,8 +12,8 @@ module Rhino
       when J::NativeArray           then array(object)
       when J::NativeDate            then Time.at(object.getJSTimeValue() / 1000)
       when J::Regexp::NativeRegExp  then object
-      when J::Function              then r2j(object) {|o| NativeFunction.new(o)}
-      when J::Scriptable            then r2j(object) {|o| NativeObject.new(o)}
+      when J::Function              then j2r(object) {|o| NativeFunction.new(o)}
+      when J::Scriptable            then j2r(object) {|o| NativeObject.new(o)}
       else  object
       end
     end
@@ -24,10 +24,10 @@ module Rhino
       when TrueClass,FalseClass then object
       when Array                then J::NativeArray.new(object.to_java)
       when Hash                 then ruby_hash_to_native(object)
-      when Proc,Method          then RubyFunction.new(object)
+      when Proc,Method          then r2j(object, object.to_s) {|o| RubyFunction.new(o)}
       when NativeObject         then object.j
       when J::Scriptable        then object
-      else RubyObject.new(object)
+      else r2j(object) {|o| RubyObject.new(o)}
       end
     end
 
@@ -45,19 +45,37 @@ module Rhino
       native_object.j
 		end
 
-    @@r2j = {}
-
-		def r2j(value)
-      if ref = @@r2j[value.object_id]
+    @@j2r = {}
+		def j2r(value)
+		  key = value.object_id
+      if ref = @@j2r[key]
         if peer = ref.get()
           return peer
+        else
+          @@j2r.delete(key)
+          return j2r(value) {|o| yield o}
         end
       else
         yield(value).tap do |peer|
-          @@r2j[value.object_id] = java.lang.ref.WeakReference.new(peer)
+          @@j2r[key] = java.lang.ref.WeakReference.new(peer)
         end
       end
     end
 
+    @@r2j = {}
+    def r2j(value, key = value.object_id)
+      if ref = @@r2j[key]
+        if peer = ref.get()
+          return peer
+        else
+          @@r2j.delete(key)
+          return r2j(value, key) {|o| yield o}
+        end
+      else
+        yield(value).tap do |peer|
+          @@r2j[key] = java.lang.ref.WeakReference.new(peer)
+        end
+      end
+    end
   end
 end
