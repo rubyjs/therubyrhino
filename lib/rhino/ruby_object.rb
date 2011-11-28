@@ -21,7 +21,7 @@ module Rhino
     end
 
     def put(key, start, value)
-      if @ruby.respond_to?("#{key}=")
+      if accessible_methods(true).include?(:"#{key}=")
         @ruby.send("#{key}=", To.ruby(value))
         value
       else
@@ -30,7 +30,7 @@ module Rhino
     end
 
     def getIds()
-      @ruby.public_methods(false).map {|m| m.gsub(/(.)_(.)/) {java.lang.String.new("#{$1}#{$2.upcase}")}}.to_java
+      accessible_methods.map {|m| m.to_s.gsub(/(.)_(.)/) {java.lang.String.new("#{$1}#{$2.upcase}")}}.to_java
     end
 
     def to_s
@@ -39,6 +39,22 @@ module Rhino
 
     alias_method :prototype, :getPrototype
 
+    protected
+
+    def accessible_methods(special_methods = false)
+      self.class.accessible_methods(@ruby, special_methods)
+    end
+
+    def self.accessible_methods(obj, special_methods = false)
+      obj.public_methods(false).collect(&:to_sym).to_set.tap do |methods|
+        ancestors = obj.class.ancestors.dup
+        while ancestor = ancestors.shift
+          break if ancestor == ::Object
+          methods.merge(ancestor.public_instance_methods(false).collect(&:to_sym))
+        end
+        methods.reject! {|m| m == :[] || m == :[]= || m.to_s =~ /=$/} unless special_methods
+      end
+    end
 
     class Prototype < J::ScriptableObject
 
@@ -48,7 +64,7 @@ module Rhino
           return RubyFunction.new(lambda { "[Ruby #{robject.class.name}]"})
         end
         rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}.to_sym
-        if (robject.public_methods(false).collect(&:to_sym).include?(rb_name))
+        if (RubyObject.accessible_methods(robject).include?(rb_name))
           method = robject.method(rb_name)
           if method.arity == 0
             To.javascript(method.call)
@@ -62,7 +78,8 @@ module Rhino
 
       def has(name, start)
         rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}.to_sym
-        To.ruby(start).public_methods(false).collect(&:to_sym).include?(rb_name) ? true : super(name,start)
+        robject = To.ruby(start)
+        RubyObject.accessible_methods(robject).include?(rb_name) || super(name,start)
       end
 
       Generic = new
