@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.rubyforge_project = %q{therubyrhino}
   s.summary = %q{Embed the Rhino JavaScript interpreter into JRuby}
 
+  s.add_development_dependency "rake"
   s.add_development_dependency "rspec"
   s.add_development_dependency "jruby-openssl"
 end
