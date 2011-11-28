@@ -1,5 +1,5 @@
 require 'java'
-require 'rhino/rhino-1.7R2.jar'
+require 'rhino/rhino-1.7R3.jar'
 
 module Rhino
   # This module contains all the native Rhino objects implemented in Java
