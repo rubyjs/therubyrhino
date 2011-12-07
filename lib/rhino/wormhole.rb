@@ -1,19 +1,19 @@
 
 module Rhino
   module To
-    JS_UNDEF = [J::Scriptable::NOT_FOUND, J::Undefined]
+    JS_UNDEF = [JS::Scriptable::NOT_FOUND, JS::Undefined]
 
     module_function
 
     def ruby(object)
       case object
       when *JS_UNDEF                then nil
-      when J::Wrapper               then object.unwrap
-      when J::NativeArray           then array(object)
-      when J::NativeDate            then Time.at(object.getJSTimeValue() / 1000)
-      when J::Regexp::NativeRegExp  then object
-      when J::Function              then j2r(object) {|o| NativeFunction.new(o)}
-      when J::Scriptable            then j2r(object) {|o| NativeObject.new(o)}
+      when JS::Wrapper               then object.unwrap
+      when JS::NativeArray           then array(object)
+      when JS::NativeDate            then Time.at(object.getJSTimeValue() / 1000)
+      when JS::Regexp::NativeRegExp  then object
+      when JS::Function              then j2r(object) {|o| NativeFunction.new(o)}
+      when JS::Scriptable            then j2r(object) {|o| NativeObject.new(o)}
       else  object
       end
     end
@@ -22,11 +22,11 @@ module Rhino
       case object
       when String,Numeric       then object
       when TrueClass,FalseClass then object
-      when Array                then J::NativeArray.new(object.to_java)
+      when Array                then JS::NativeArray.new(object.to_java)
       when Hash                 then ruby_hash_to_native(object)
       when Proc,Method          then r2j(object, object.to_s) {|o| RubyFunction.new(o)}
       when NativeObject         then object.j
-      when J::Scriptable        then object
+      when JS::Scriptable        then object
       else r2j(object) {|o| RubyObject.new(o)}
       end
     end

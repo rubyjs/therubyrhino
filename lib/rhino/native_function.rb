@@ -11,19 +11,19 @@ module Rhino
   #
   class NativeFunction < NativeObject
     def call(*args)
-      cxt = J::Context.enter()
+      cxt = JS::Context.enter()
       scope = @j.getParentScope() || cxt.initStandardObjects()
       @j.call(cxt, scope, scope, args.map {|o| To.javascript(o)})
     ensure
-      J::Context.exit()
+      JS::Context.exit()
     end
 
     def methodcall(this, *args)
-      cxt = J::Context.enter()
+      cxt = JS::Context.enter()
       scope = @j.getParentScope() || cxt.initStandardObjects()
       @j.call(cxt, scope, To.javascript(this), args.map {|o| To.javascript(o)})
     ensure
-      J::Context.exit()
+      JS::Context.exit()
     end
   end
 end

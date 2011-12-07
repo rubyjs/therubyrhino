@@ -1,7 +1,7 @@
 
 module Rhino
-  class RubyObject < J::ScriptableObject
-    include J::Wrapper
+  class RubyObject < JS::ScriptableObject
+    include JS::Wrapper
 
     def initialize(object)
       super()
@@ -40,7 +40,7 @@ module Rhino
     alias_method :prototype, :getPrototype
 
 
-    class Prototype < J::ScriptableObject
+    class Prototype < JS::ScriptableObject
 
       def get(name, start)
         robject = To.ruby(start)

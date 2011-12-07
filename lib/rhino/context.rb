@@ -98,7 +98,7 @@ module Rhino
             result = @native.evaluateString(scope, source.to_s, source_name, line_number, nil)
           end
           To.ruby result
-        rescue J::RhinoException => e
+        rescue JS::RhinoException => e
           raise Rhino::JavascriptError, e
         end
       end
@@ -144,7 +144,7 @@ module Rhino
         @native.factory.enterContext(@native)
         yield self
       ensure
-        J::Context.exit()
+        JS::Context.exit()
       end if block_given?
     end
 
@@ -174,7 +174,7 @@ module Rhino
     end
   end
 
-  class ContextFactory < J::ContextFactory # :nodoc:
+  class ContextFactory < JS::ContextFactory # :nodoc:
 
     def observeInstructionCount(cxt, count)
       raise RunawayScriptError, "script exceeded allowable instruction count" if count > @limit

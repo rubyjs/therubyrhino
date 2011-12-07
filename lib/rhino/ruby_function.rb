@@ -1,6 +1,6 @@
 
 module Rhino
-  class RubyFunction < J::BaseFunction
+  class RubyFunction < JS::BaseFunction
     
     def initialize(callable)
       super()

@@ -9,7 +9,7 @@ module Rhino
     attr_reader :j
     
     def initialize(j=nil) # :nodoc:
-      @j = j || J::NativeObject.new
+      @j = j || JS::NativeObject.new
     end
     
     # get a property from this javascript object, where +k+ is a string or symbol
@@ -23,7 +23,7 @@ module Rhino
     #   jsobject['foo'] # => 'bar'
     #   jsobject['Take me to'] # => 'a funky town'
     def [](k)
-      To.ruby J::ScriptableObject.getProperty(@j,k.to_s)
+      To.ruby JS::ScriptableObject.getProperty(@j,k.to_s)
     end
     
     # set a property on the javascript object, where +k+ is a string or symbol corresponding
@@ -36,7 +36,7 @@ module Rhino
     #   end
 
     def []=(k,v)
-      J::ScriptableObject.putProperty(@j, k.to_s, To.javascript(v))
+      JS::ScriptableObject.putProperty(@j, k.to_s, To.javascript(v))
     end
     
     # enumerate the key value pairs contained in this javascript object. e.g.
