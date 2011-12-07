@@ -46,8 +46,24 @@ describe Rhino::Context do
 
     it "allows java integration to be turned on when initializing standard objects" do
       Rhino::Context.open(:java => true) do |cxt|
-          cxt["Packages"].should_not be_nil
+        cxt["Packages"].should_not be_nil
       end
     end
   end
+
+  it "should get default interpreter version" do
+    context = Rhino::Context.new
+    
+    context.version.should == 0
+  end
+  
+  it "should set interpreter version" do
+    context = Rhino::Context.new
+    context.version = 1.6
+    context.version.should == 1.6
+    
+    context.version = '1.7'
+    context.version.should == 1.7
+  end
+  
 end

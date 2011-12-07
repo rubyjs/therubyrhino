@@ -137,6 +137,31 @@ module Rhino
       @native.setOptimizationLevel(level)
     end
 
+    # Get the JS interpreter version. 
+    # Returns a number e.g. 1.7, nil if unknown and 0 for default.
+    def version
+      case const_value = @native.getLanguageVersion
+        when -1 then nil # VERSION_UNKNOWN
+        when  0 then 0 # VERSION_DEFAULT
+        else const_value / 100.0 # VERSION_1_1 (1.1 = 110 / 100)
+      end
+    end
+    
+    # Sets interpreter mode a.k.a. JS language version e.g. 1.7 (if supported).
+    def version=(version)
+      const = version.to_s.gsub('.', '_').upcase
+      const = "VERSION_#{const}" if const[0, 7] != 'VERSION'
+      js_context = @native.class # Context
+      if js_context.constants.include?(const)
+        const_value = js_context.const_get(const)
+        @native.setLanguageVersion(const_value)
+        const_value
+      else
+        @native.setLanguageVersion(js_context::VERSION_DEFAULT)
+        nil
+      end
+    end
+    
     # Enter this context for operations. Some methods such as eval() will
     # fail unless this context is open
     def open
