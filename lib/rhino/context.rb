@@ -2,40 +2,38 @@ require 'stringio'
 
 module Rhino
 
-# ==Overview
-#  All Javascript must be executed in a context which represents the execution environment in
-#  which scripts will run. The environment consists of the standard javascript objects
-#  and functions like Object, String, Array, etc... as well as any objects or functions which
-#  have been defined in it. e.g.
-#
-#   Context.open do |cxt|
-#     cxt['num'] = 5
-#     cxt.eval('num + 5') #=> 10
-#   end
-#
-# == Multiple Contexts.
-# The same object may appear in any number of contexts, but only one context may be executing javascript code
-# in any given thread. If a new context is opened in a thread in which a context is already opened, the second
-# context will "mask" the old context e.g.
-#
-#   six = 6
-#   Context.open do |cxt|
-#     cxt['num'] = 5
-#     cxt.eval('num') # => 5
-#     Context.open do |cxt|
-#       cxt['num'] = 10
-#       cxt.eval('num') # => 10
-#       cxt.eval('++num') # => 11
-#     end
-#     cxt.eval('num') # => 5
-#   end
-#
-# == Notes
-# While there are many similarities between Rhino::Context and Java::org.mozilla.javascript.Context, they are not
-# the same thing and should not be confused.
-
+  # ==Overview
+  #  All Javascript must be executed in a context which represents the execution environment in
+  #  which scripts will run. The environment consists of the standard javascript objects
+  #  and functions like Object, String, Array, etc... as well as any objects or functions which
+  #  have been defined in it. e.g.
+  #
+  #   Context.open do |cxt|
+  #     cxt['num'] = 5
+  #     cxt.eval('num + 5') #=> 10
+  #   end
+  #
+  # == Multiple Contexts.
+  # The same object may appear in any number of contexts, but only one context may be executing javascript code
+  # in any given thread. If a new context is opened in a thread in which a context is already opened, the second
+  # context will "mask" the old context e.g.
+  #
+  #   six = 6
+  #   Context.open do |cxt|
+  #     cxt['num'] = 5
+  #     cxt.eval('num') # => 5
+  #     Context.open do |cxt|
+  #       cxt['num'] = 10
+  #       cxt.eval('num') # => 10
+  #       cxt.eval('++num') # => 11
+  #     end
+  #     cxt.eval('num') # => 5
+  #   end
+  #
+  # == Notes
+  # While there are many similarities between Rhino::Context and Java::org.mozilla.javascript.Context, they are not
+  # the same thing and should not be confused.
   class Context
-    attr_reader :scope
 
     class << self
 
@@ -51,37 +49,40 @@ module Rhino
 
     end
 
+    attr_reader :scope
+    
     # Create a new javascript environment for executing javascript and ruby code.
     # * <tt>:sealed</tt> - if this is true, then the standard objects such as Object, Function, Array will not be able to be modified
     # * <tt>:with</tt> - use this ruby object as the root scope for all javascript that is evaluated
     # * <tt>:java</tt> - if true, java packages will be accessible from within javascript
     def initialize(options = {}) #:nodoc:
-      ContextFactory.new.call do |native|
-        @native = native
-        @global = NativeObject.new(@native.initStandardObjects(nil, options[:sealed] == true))
+      @factory = ContextFactory.new
+      @factory.call do |context|
+        @native = context
+        @global = @native.initStandardObjects(nil, options[:sealed] == true)
         if with = options[:with]
           @scope = To.javascript(with)
-          @scope.setParentScope(@global.j)
+          @scope.setParentScope(@global)
         else
           @scope = @global
         end
         unless options[:java]
           for package in ["Packages", "java", "javax", "org", "com", "edu", "net"]
-            @global.j.delete(package)
+            @global.delete(package)
           end
         end
       end
     end
 
     # Read a value from the global scope of this context
-    def [](k)
-      @scope[k]
+    def [](key)
+      @scope[key]
     end
 
     # Set a value in the global scope of this context. This value will be visible to all the
     # javascript that is executed in this context.
-    def []=(k, v)
-      @scope[k] = v
+    def []=(key, val)
+      @scope[key] = val
     end
 
     # Evaluate a string of javascript in this context:
@@ -125,8 +126,8 @@ module Rhino
     # If this instruction limit is exceeded, then a Rhino::RunawayScriptError
     # will be raised
     def instruction_limit=(limit)
-      @native.setInstructionObserverThreshold(limit);
-      @native.factory.instruction_limit = limit
+      @native.setInstructionObserverThreshold(limit)
+      @factory.instruction_limit = limit
     end
 
     # Set the optimization level that this context will use. This is sometimes necessary
@@ -166,7 +167,7 @@ module Rhino
     # fail unless this context is open
     def open
       begin
-        @native.factory.enterContext(@native)
+        @factory.enterContext(@native)
         yield self
       ensure
         JS::Context.exit()
@@ -197,6 +198,7 @@ module Rhino
         raise java.io.IOException.new, "Failed reading from ruby IO object"
       end
     end
+    
   end
 
   class ContextFactory < JS::ContextFactory # :nodoc:
@@ -208,10 +210,10 @@ module Rhino
     def instruction_limit=(count)
       @limit = count
     end
+    
   end
 
   class ContextError < StandardError # :nodoc:
-
   end
 
   class JavascriptError < StandardError # :nodoc:
@@ -232,4 +234,5 @@ module Rhino
 
   class RunawayScriptError < StandardError # :nodoc:
   end
+  
 end

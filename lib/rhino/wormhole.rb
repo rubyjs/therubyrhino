@@ -1,81 +1,67 @@
 
 module Rhino
   module To
-    JS_UNDEF = [JS::Scriptable::NOT_FOUND, JS::Undefined]
 
     module_function
 
-    def ruby(object)
+    def to_ruby(object)
       case object
-      when *JS_UNDEF                then nil
-      when JS::Wrapper               then object.unwrap
-      when JS::NativeArray           then array(object)
-      when JS::NativeDate            then Time.at(object.getJSTimeValue() / 1000)
-      when JS::Regexp::NativeRegExp  then object
-      when JS::Function              then j2r(object) {|o| NativeFunction.new(o)}
-      when JS::Scriptable            then j2r(object) {|o| NativeObject.new(o)}
-      else  object
+      when JS::Scriptable::NOT_FOUND, JS::Undefined then nil
+      when JS::Wrapper           then object.unwrap
+      when JS::NativeArray       then array_to_ruby(object)
+      when JS::NativeDate        then Time.at(object.getJSTimeValue / 1000)
+      else object
       end
     end
+    def ruby(object); to_ruby(object); end # alias
 
-    def javascript(object)
+    def to_javascript(object, scope = nil)
       case object
-      when String,Numeric       then object
-      when TrueClass,FalseClass then object
-      when Array                then JS::NativeArray.new(object.to_java)
-      when Hash                 then ruby_hash_to_native(object)
-      when Proc,Method          then r2j(object, object.to_s) {|o| RubyFunction.new(o)}
-      when NativeObject         then object.j
+      when NilClass              then object
+      when String, Numeric       then object
+      when TrueClass, FalseClass then object
+      when Array                 then array_to_javascript(object, scope)
+      when Hash                  then hash_to_javascript(object, scope)
+      when Proc, Method          then RubyFunction.new(object)
       when JS::Scriptable        then object
-      else r2j(object) {|o| RubyObject.new(o)}
+      else RubyObject.new(object)  
       end
     end
+    def javascript(object, scope = nil); to_javascript(object, scope); end # alias
 
-    def array(native)
-      native.length.times.map {|i| ruby(native.get(i,native))}
+    def array_to_ruby(js_array)
+      js_array.length.times.map { |i| to_ruby( js_array.get(i, js_array) ) }
     end
 
-    def ruby_hash_to_native(ruby_object)
-      native_object = NativeObject.new
-
-      ruby_object.each_pair do |k, v|
-        native_object[k] = v
-      end
-
-      native_object.j
-		end
-
-    @@j2r = {}
-		def j2r(value)
-		  key = value.object_id
-      if ref = @@j2r[key]
-        if peer = ref.get()
-          return peer
-        else
-          @@j2r.delete(key)
-          return j2r(value) {|o| yield o}
-        end
+    def args_to_javascript(args, scope = nil)
+      args.map { |arg| to_javascript(arg, scope) }.to_java
+    end
+    
+    def array_to_javascript(rb_array, scope = nil)
+      if scope 
+        raise "no current context" unless context = JS::Context.getCurrentContext
+        context.newArray(scope, rb_array.to_java)
       else
-        yield(value).tap do |peer|
-          @@j2r[key] = java.lang.ref.WeakReference.new(peer)
-        end
+        JS::NativeArray.new(rb_array.to_java)
       end
     end
-
-    @@r2j = {}
-    def r2j(value, key = value.object_id)
-      if ref = @@r2j[key]
-        if peer = ref.get()
-          return peer
+    
+    def hash_to_javascript(rb_hash, scope = nil)
+      js_object = 
+        if scope 
+          raise "no current context" unless context = JS::Context.getCurrentContext
+          context.newObject(scope)
         else
-          @@r2j.delete(key)
-          return r2j(value, key) {|o| yield o}
+          JS::NativeObject.new
         end
-      else
-        yield(value).tap do |peer|
-          @@r2j[key] = java.lang.ref.WeakReference.new(peer)
-        end
+      # JS::NativeObject implements Map put it's #put does :
+      # throw new UnsupportedOperationException(); thus no []=
+      rb_hash.each_pair do |key, val| 
+        js_val = to_javascript(val, scope)
+        JS::ScriptableObject.putProperty(js_object, key.to_s, js_val)
       end
+      js_object
     end
+    
   end
 end
