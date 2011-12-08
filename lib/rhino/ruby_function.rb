@@ -7,8 +7,22 @@ module Rhino
       @callable = callable
     end
     
-    def call(cxt, scope, this, args)
-      To.javascript @callable.call(*Array(args).map {|a| To.ruby(a)})
+    def unwrap
+      @callable
     end
+    
+    # override Object BaseFunction#call(Context context, Scriptable scope, 
+    #                                   Scriptable thisObj, Object[] args)
+    def call(context, scope, this, args)
+      rb_args = To.args_to_ruby(args.to_a)
+      begin
+        result = @callable.call(*rb_args)
+      rescue => e
+        # ... correct wrapping thus it's try { } catch (e) works in JS :
+        raise JS::WrappedException.new(org.jruby.exceptions.RaiseException.new(e))
+      end
+      To.to_javascript(result, scope)
+    end
+    
   end
 end

@@ -8,64 +8,89 @@ module Rhino
       @ruby = object
     end
 
+    # abstract Object Wrapper#unwrap();
     def unwrap
       @ruby
     end
 
-    def getClassName()
+    # abstract String Scriptable#getClassName();
+    def getClassName
       @ruby.class.name
     end
-
-    def getPrototype()
-      Prototype::Generic
+    
+    def toString
+      "[ruby #{getClassName}]" # [object User]
     end
 
-    def put(key, start, value)
-      if @ruby.respond_to?("#{key}=")
-        @ruby.send("#{key}=", To.ruby(value))
-        value
-      else
-        super
-      end
-    end
-
-    def getIds()
-      @ruby.public_methods(false).map {|m| m.gsub(/(.)_(.)/) {java.lang.String.new("#{$1}#{$2.upcase}")}}.to_java
-    end
-
-    def to_s
-      "[Native #{@ruby.class.name}]"
-    end
-
-    alias_method :prototype, :getPrototype
-
-
-    class Prototype < JS::ScriptableObject
-
-      def get(name, start)
-        robject = To.ruby(start)
-        if name == "toString"
-          return RubyFunction.new(lambda { "[Ruby #{robject.class.name}]"})
-        end
-        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}.to_sym
-        if (robject.public_methods(false).collect(&:to_sym).include?(rb_name))
-          method = robject.method(rb_name)
-          if method.arity == 0
-            To.javascript(method.call)
-          else
-            RubyFunction.new(method)
-          end
-        else
-          super(name, start)
+    # override Object Scriptable#get(String name, Scriptable start);
+    # override Object Scriptable#get(int index, Scriptable start);
+    def get(name, start)
+      if name.is_a?(String)
+        # NOTE: preferrably when using a ruby object in JS methods should
+        # be used but instance variables will work as well but if there's
+        # a attr reader it is given a preference e.g. :
+        #
+        #     class Foo
+        #       attr_reader :bar2
+        #       def initialize
+        #         @bar1 = 'bar1'
+        #         @bar2 = 'bar2'
+        #       end
+        #     end
+        #     
+        #     fooObj.bar1; // 'bar1'
+        #     fooObj.bar2; // function
+        #     fooObj.bar2(); // 'bar2'
+        #
+        if @ruby.respond_to?(name)
+          return RubyFunction.new(@ruby.method(name))
+        elsif @ruby.instance_variables.include?(var_name = "@#{name}")
+          var_value = @ruby.instance_variable_get(var_name)
+          return Rhino::To.to_javascript(var_value, self)
         end
       end
-
-      def has(name, start)
-        rb_name = name.gsub(/([a-z])([A-Z])/) {"#{$1}_#{$2.downcase}"}.to_sym
-        To.ruby(start).public_methods(false).collect(&:to_sym).include?(rb_name) ? true : super(name,start)
-      end
-
-      Generic = new
+      super
     end
+
+    # override boolean Scriptable#has(String name, Scriptable start);
+    # override boolean Scriptable#has(int index, Scriptable start);
+    def has(name, start)
+      if name.is_a?(String) 
+        if @ruby.respond_to?(name) || 
+           @ruby.instance_variables.include?("@#{name}")
+          return true
+        end
+      end
+      super
+    end
+
+    # override void Scriptable#put(String name, Scriptable start, Object value);
+    # override void Scriptable#put(int index, Scriptable start, Object value);
+    def put(name, start, value)
+      if name.is_a?(String)
+        if @ruby.respond_to?(set_name = "#{name}=")
+          return @ruby.send(set_name, Rhino::To.to_ruby(value))
+        end
+      end
+      super
+    end
+    
+    # override boolean Scriptable#hasInstance(Scriptable instance);
+    def hasInstance(instance)
+      super
+    end
+    
+    # override Object[] Scriptable#getIds();
+    def getIds
+      ids = @ruby.instance_variables.map { |ivar| ivar[1..-1].to_java }
+      @ruby.public_methods(false).each do |name| 
+        name = name[0...-1] if name[-1, 1] == '=' # 'foo=' ... 'foo'
+        name = name.to_java
+        ids << name unless ids.include?(name)
+      end
+      super.each { |id| ids.unshift(id) }
+      ids.to_java
+    end
+    
   end
 end

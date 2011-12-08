@@ -29,6 +29,10 @@ module Rhino
     end
     def javascript(object, scope = nil); to_javascript(object, scope); end # alias
 
+    def args_to_ruby(args)
+      args.map { |arg| to_ruby(arg) }
+    end
+    
     def array_to_ruby(js_array)
       js_array.length.times.map { |i| to_ruby( js_array.get(i, js_array) ) }
     end
