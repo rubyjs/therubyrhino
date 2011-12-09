@@ -40,8 +40,7 @@ module Rhino
       end
 
       def array_to_javascript(rb_array, scope = nil)
-        if scope 
-          raise "no current context" unless context = JS::Context.getCurrentContext
+        if scope && context = JS::Context.getCurrentContext
           context.newArray(scope, rb_array.to_java)
         else
           JS::NativeArray.new(rb_array.to_java)
@@ -50,8 +49,7 @@ module Rhino
 
       def hash_to_javascript(rb_hash, scope = nil)
         js_object = 
-          if scope 
-            raise "no current context" unless context = JS::Context.getCurrentContext
+          if scope && context = JS::Context.getCurrentContext
             context.newObject(scope)
           else
             JS::NativeObject.new

@@ -98,6 +98,8 @@ end
 
 class Java::OrgMozillaJavascript::NativeObject
   
+  import "org.mozilla.javascript"
+  
   # re-implement Map#put
   def []=(key, value)
     scope = self
