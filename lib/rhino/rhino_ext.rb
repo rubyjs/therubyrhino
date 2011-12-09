@@ -100,7 +100,16 @@ class Java::OrgMozillaJavascript::NativeObject
   
   import "org.mozilla.javascript"
   
-  # re-implement Map#put
+  def [](name)
+    value = Rhino.to_ruby(ScriptableObject.getProperty(self, s_name = name.to_s))
+    # handle { '5': 5 }.keys() ... [ 5 ] not [ '5' ] !
+    if value.nil? && (i_name = s_name.to_i) != 0
+      value = Rhino.to_ruby(ScriptableObject.getProperty(self, i_name))
+    end
+    value
+  end
+  
+  # re-implement unsupported Map#put
   def []=(key, value)
     scope = self
     ScriptableObject.putProperty(self, key.to_s, Rhino.to_javascript(value, scope))
