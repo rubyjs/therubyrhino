@@ -19,6 +19,7 @@ module Rhino
       when TrueClass, FalseClass then object
       when Array                 then array_to_javascript(object, scope)
       when Hash                  then hash_to_javascript(object, scope)
+      when Time                  then time_to_javascript(object, scope)
       when Proc, Method          then RubyFunction.new(object)
       when JS::Scriptable        then object
       else RubyObject.new(object)  
@@ -63,5 +64,22 @@ module Rhino
         js_object
       end
     
+      def time_to_javascript(time, scope = nil)
+        millis = time.to_f * 1000
+        if scope && context = JS::Context.getCurrentContext
+          JS::ScriptRuntime.newObject(context, scope, 'Date', [ millis ].to_java)
+        else
+          # the pure reflection way - god I love Java's private :
+          js_klass = JS::NativeObject.java_class
+          new = js_klass.getDeclaredConstructor
+          new.setAccessible(true)
+          js_date = new.newInstance
+          date = js_klass.getDeclaredField(:date)
+          date.setAccessible(true)
+          date.setDouble(js_date, millis)
+          js_date
+        end
+      end
+      
   end
 end
