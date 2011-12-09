@@ -33,5 +33,9 @@ describe 'deprecations' do
   it "NativeFunction constant exists" do
     lambda { Rhino::NativeFunction }.should_not raise_error
   end
+
+  it "JavascriptError returns JSError" do
+    lambda { Rhino::JavascriptError.should be(Rhino::JSError) }.should_not raise_error
+  end
   
 end

@@ -8,6 +8,9 @@ module Rhino
     when 'J' then
       warn "[DEPRECATION] `Rhino::J` is deprecated, use `Rhino::JS` instead."
       return JS
+    when 'JavascriptError' then
+      warn "[DEPRECATION] `Rhino::JavascriptError` is deprecated, use `Rhino::JSError` instead."
+      return JSError
     when 'NativeObject' then
       warn "[DEPRECATION] `Rhino::NativeObject` is no longer used, returning a stub."
       return @@stub_class

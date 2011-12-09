@@ -22,6 +22,7 @@ Rhino.extend Rhino::To
 
 require 'rhino/object'
 require 'rhino/context'
+require 'rhino/error'
 require 'rhino/rhino_ext'
 require 'rhino/ruby_object'
 require 'rhino/ruby_function'

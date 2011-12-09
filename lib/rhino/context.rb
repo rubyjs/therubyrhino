@@ -90,23 +90,18 @@ module Rhino
     # * <tt>source_name</tt> - associated name for this source code. Mainly useful for backtraces.
     # * <tt>line_number</tt> - associate this number with the first line of executing source. Mainly useful for backtraces
     def eval(source, source_name = "<eval>", line_number = 1)
-      self.open do
-        begin
-          scope = Rhino.to_javascript(@scope)
-          if IO === source || StringIO === source
-            result = @native.evaluateReader(scope, IOReader.new(source), source_name, line_number, nil)
-          else
-            result = @native.evaluateString(scope, source.to_s, source_name, line_number, nil)
-          end
-          Rhino.to_ruby(result)
-        rescue JS::RhinoException => e
-          raise JavascriptError, e
+      open do
+        if IO === source || StringIO === source
+          result = @native.evaluateReader(@scope, IOReader.new(source), source_name, line_number, nil)
+        else
+          result = @native.evaluateString(@scope, source.to_s, source_name, line_number, nil)
         end
+        Rhino.to_ruby(result)
       end
     end
-
+    
     def evaluate(*args) # :nodoc:
-      self.eval(*args)
+      eval(*args) # an alias
     end
 
     # Read the contents of <tt>filename</tt> and evaluate it as javascript. Returns the result of evaluating the
@@ -163,39 +158,49 @@ module Rhino
       end
     end
     
-    # Enter this context for operations. Some methods such as eval() will
-    # fail unless this context is open
-    def open
-      begin
-        @factory.enterContext(@native)
-        yield self
-      ensure
-        JS::Context.exit()
-      end if block_given?
+    # Enter this context for operations. 
+    # Some methods such as eval() will fail unless this context is open !
+    def open(&block)
+      do_open(&block)
+    rescue JS::RhinoException => e
+      raise Rhino::JSError.new(e)
     end
-
+    
+    private
+    
+      def do_open
+        begin
+          @factory.enterContext(@native)
+          yield self
+        ensure
+          JS::Context.exit
+        end      
+      end
+    
   end
 
-  class IOReader < java.io.Reader #:nodoc:
+  class IOReader < java.io.Reader # :nodoc:
 
     def initialize(io)
       @io = io
     end
 
-    def read(charbuffer, offset, length)
+    # implement int Reader#read(char[] buffer, int offset, int length)
+    def read(buffer, offset, length)
+      str = nil
       begin
         str = @io.read(length)
-        if str.nil?
-          return -1
-        else
-          jstring = java.lang.String.new(str)
-          for i in 0 .. jstring.length - 1
-            charbuffer[i + offset] = jstring.charAt(i)
-          end
-          return jstring.length
-        end
       rescue StandardError => e
         raise java.io.IOException.new, "Failed reading from ruby IO object"
+      end
+      if str.nil?
+        return -1
+      else
+        jstr = str.to_java
+        for i in 0 .. jstr.length - 1
+          buffer[i + offset] = jstr.charAt(i)
+        end
+        return jstr.length
       end
     end
     
@@ -216,23 +221,7 @@ module Rhino
   class ContextError < StandardError # :nodoc:
   end
 
-  class JavascriptError < StandardError # :nodoc:
-    def initialize(native)
-      @native = native
-    end
-
-    def message
-      @native.cause.details
-    end
-
-    def javascript_backtrace
-      @native.getScriptStackTrace()
-    end
-  end
-
-  JSError = JavascriptError
-
-  class RunawayScriptError < StandardError # :nodoc:
+  class RunawayScriptError < ContextError # :nodoc:
   end
   
 end
