@@ -5,16 +5,16 @@ describe Rhino::To do
   describe "ruby translation" do
     
     it "converts javascript NOT_FOUND to ruby nil" do
-      Rhino::To.ruby(Rhino::JS::Scriptable::NOT_FOUND).should be_nil
+      Rhino.to_ruby(Rhino::JS::Scriptable::NOT_FOUND).should be_nil
     end
   
     it "converts javascript undefined into nil" do
-      Rhino::To.ruby(Rhino::JS::Undefined.instance).should be_nil
+      Rhino.to_ruby(Rhino::JS::Undefined.instance).should be_nil
     end
     
     it "does return javascript object" do
       Rhino::JS::NativeObject.new.tap do |js_obj|
-        Rhino::To.ruby(js_obj).tap do |rb_obj|
+        Rhino.to_ruby(js_obj).tap do |rb_obj|
           rb_obj.should be(js_obj)
         end
       end
@@ -22,7 +22,7 @@ describe Rhino::To do
     
     it "wraps native javascript arrays into a ruby NativeArray wrapper" do
       Rhino::JS::NativeArray.new([1,2,4].to_java).tap do |js_array|
-        Rhino::To.ruby(js_array).should == [1,2,4]
+        Rhino.to_ruby(js_array).should == [1,2,4]
       end
     end
     
@@ -31,7 +31,7 @@ describe Rhino::To do
       klass = Class.new(Rhino::JS::BaseFunction)
       
       klass.new.tap do |js_fn|
-        Rhino::To.ruby(js_fn).tap do |rb_fn|
+        Rhino.to_ruby(js_fn).tap do |rb_fn|
           rb_fn.should be(js_fn)
         end
       end
@@ -40,7 +40,7 @@ describe Rhino::To do
     
     it "leaves native ruby objects alone" do
       Object.new.tap do |o|
-        Rhino::To.ruby(o).should be(o)
+        Rhino.to_ruby(o).should be(o)
       end
     end
     
@@ -49,7 +49,7 @@ describe Rhino::To do
         scope = cx.scope
         j_str = java.lang.String.new("Hello World")
         Rhino::JS::NativeJavaObject.new(scope, j_str, j_str.getClass()).tap do |o|
-          Rhino::To.ruby(o).should == "Hello World"
+          Rhino.to_ruby(o).should == "Hello World"
         end
       end
     end
@@ -59,22 +59,22 @@ describe Rhino::To do
   describe  "javascript translation" do
     
     it "passes primitives through to the js layer to let jruby and rhino do he thunking" do
-      Rhino::To.javascript(1).should be(1)
-      Rhino::To.javascript(2.5).should == 2.5
-      Rhino::To.javascript("foo").should == "foo"
-      Rhino::To.javascript(true).should be(true)
-      Rhino::To.javascript(false).should be(false)
-      Rhino::To.javascript(nil).should be_nil
+      Rhino.to_javascript(1).should be(1)
+      Rhino.to_javascript(2.5).should == 2.5
+      Rhino.to_javascript("foo").should == "foo"
+      Rhino.to_javascript(true).should be(true)
+      Rhino.to_javascript(false).should be(false)
+      Rhino.to_javascript(nil).should be_nil
     end
     
     it "leaves native javascript objects alone" do
       Rhino::JS::NativeObject.new.tap do |o|
-        Rhino::To.javascript(o).should be(o)
+        Rhino.to_javascript(o).should be(o)
       end
     end
     
     it "converts ruby arrays into javascript arrays" do
-      Rhino::To.javascript([1,2,3,4,5]).tap do |a|
+      Rhino.to_javascript([1,2,3,4,5]).tap do |a|
         a.should be_kind_of(Rhino::JS::NativeArray)
         a.get(0,a).should be(1)
         a.get(1,a).should be(2)
@@ -85,7 +85,7 @@ describe Rhino::To do
     end
     
     it "converts ruby hashes into native objects" do
-      Rhino::To.javascript({ :bare => true }).tap do |h|
+      Rhino.to_javascript({ :bare => true }).tap do |h|
         h.should be_kind_of(Rhino::JS::NativeObject)
         h.get("bare", h).should be(true)
         h.prototype.should be_nil # this is how Rhino works !
@@ -109,7 +109,7 @@ describe Rhino::To do
       end
       
       it "converts ruby arrays into javascript arrays" do
-        Rhino::To.javascript([1,2,3,4,5], @scope).tap do |a|
+        Rhino.to_javascript([1,2,3,4,5], @scope).tap do |a|
           a.should be_kind_of(Rhino::JS::NativeArray)
           a.get(0,a).should be(1)
           a.get(1,a).should be(2)
@@ -120,7 +120,7 @@ describe Rhino::To do
       end
 
       it "converts ruby hashes into native objects" do
-        Rhino::To.javascript({ :bare => true }, @scope).tap do |h|
+        Rhino.to_javascript({ :bare => true }, @scope).tap do |h|
           h.should be_kind_of(Rhino::JS::NativeObject)
           h.get("bare", h).should be(true)
           h.prototype.should_not be_nil
@@ -130,14 +130,14 @@ describe Rhino::To do
     end
     
     it "converts procs and methods into native functions" do
-      Rhino::To.javascript(lambda {|lhs,rhs| lhs * rhs}).tap do |f|
+      Rhino.to_javascript(lambda {|lhs,rhs| lhs * rhs}).tap do |f|
         f.should be_kind_of(Rhino::JS::Function)
         f.call(nil, nil, nil, [7,6]).should be(42)
       end
       
-      Rhino::To.javascript("foo,bar,baz".method(:split)).tap do |m|
+      Rhino.to_javascript("foo,bar,baz".method(:split)).tap do |m|
         m.should be_kind_of(Rhino::JS::Function)
-        Rhino::To.ruby(m.call(nil, nil, nil, ',')).should == ['foo', 'bar', 'baz']
+        Rhino.to_ruby(m.call(nil, nil, nil, ',')).should == ['foo', 'bar', 'baz']
       end
     end
 
@@ -148,7 +148,7 @@ describe Rhino::To do
 #        end        
 #      end
 #
-#      Rhino::To.javascript(klass.new).tap do |o|
+#      Rhino.to_javascript(klass.new).tap do |o|
 #        o.should be_kind_of(Rhino::RubyObject)
 #        o.prototype.tap do |p|
 #          p.should_not be_nil

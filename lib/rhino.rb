@@ -15,13 +15,14 @@ module Rhino
     
   end
   
-  J = JS # (deprecated) backward compatibility
-  
 end
+
+require 'rhino/wormhole'
+Rhino.extend Rhino::To
 
 require 'rhino/object'
 require 'rhino/context'
-require 'rhino/wormhole'
+require 'rhino/rhino_ext'
 require 'rhino/ruby_object'
 require 'rhino/ruby_function'
-require 'rhino/rhino_ext'
+require 'rhino/deprecations'

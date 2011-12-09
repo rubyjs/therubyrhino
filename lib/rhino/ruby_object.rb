@@ -46,7 +46,7 @@ module Rhino
           return RubyFunction.new(@ruby.method(name))
         elsif @ruby.instance_variables.include?(var_name = "@#{name}")
           var_value = @ruby.instance_variable_get(var_name)
-          return Rhino::To.to_javascript(var_value, self)
+          return Rhino.to_javascript(var_value, self)
         end
       end
       super
@@ -69,7 +69,7 @@ module Rhino
     def put(name, start, value)
       if name.is_a?(String)
         if @ruby.respond_to?(set_name = "#{name}=")
-          return @ruby.send(set_name, Rhino::To.to_ruby(value))
+          return @ruby.send(set_name, Rhino.to_ruby(value))
         end
       end
       super

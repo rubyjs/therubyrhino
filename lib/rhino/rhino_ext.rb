@@ -15,7 +15,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
   #     jsobject['Take me to'] # => 'a funky town'
   #
   def [](name)
-    Rhino::To.to_ruby ScriptableObject.getProperty(self, name.to_s)
+    Rhino.to_ruby ScriptableObject.getProperty(self, name.to_s)
   end
 
   # set a property on the javascript object, where +k+ is a string or symbol corresponding
@@ -29,7 +29,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
   #
   def []=(key, value)
     scope = self
-    ScriptableObject.putProperty(self, key.to_s, Rhino::To.to_javascript(value, scope))
+    ScriptableObject.putProperty(self, key.to_s, Rhino.to_javascript(value, scope))
   end
   
   # enumerate the key value pairs contained in this javascript object. e.g.
@@ -41,7 +41,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
   # outputs foo -> bar baz -> bang
   #
   def each
-    getAllIds.each { |id| yield id, Rhino::To.to_ruby(get(id, self)) }
+    getAllIds.each { |id| yield id, Rhino.to_ruby(get(id, self)) }
   end
 
   def each_key
@@ -49,7 +49,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
   end
 
   def each_value
-    getAllIds.each { |id| yield Rhino::To.to_ruby(get(id, self)) }
+    getAllIds.each { |id| yield Rhino.to_ruby(get(id, self)) }
   end
   
   def keys
@@ -84,7 +84,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
     if ScriptableObject.hasProperty(self, name.to_s)
       begin
         context = Context.enter
-        js_args = Rhino::To.args_to_javascript(args, self) # scope == self
+        js_args = Rhino.args_to_javascript(args, self) # scope == self
         ScriptableObject.callMethod(context, self, name.to_s, js_args)
       ensure
         Context.exit
@@ -101,7 +101,7 @@ class Java::OrgMozillaJavascript::NativeObject
   # re-implement Map#put
   def []=(key, value)
     scope = self
-    ScriptableObject.putProperty(self, key.to_s, Rhino::To.to_javascript(value, scope))
+    ScriptableObject.putProperty(self, key.to_s, Rhino.to_javascript(value, scope))
   end
   
 end
@@ -117,7 +117,7 @@ class Java::OrgMozillaJavascript::BaseFunction
   def call(*args)
     context = Context.enter
     scope = getParentScope || context.initStandardObjects
-    __call__(context, scope, scope, Rhino::To.args_to_javascript(args, scope))
+    __call__(context, scope, scope, Rhino.args_to_javascript(args, scope))
   ensure
     Context.exit
   end
@@ -126,7 +126,7 @@ class Java::OrgMozillaJavascript::BaseFunction
   def new(*args)
     context = Context.enter
     scope = getParentScope || context.initStandardObjects
-    construct(context, scope, Rhino::To.args_to_javascript(args, scope))
+    construct(context, scope, Rhino.args_to_javascript(args, scope))
   ensure
     Context.exit
   end

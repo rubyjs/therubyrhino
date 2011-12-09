@@ -61,7 +61,7 @@ module Rhino
         @native = context
         @global = @native.initStandardObjects(nil, options[:sealed] == true)
         if with = options[:with]
-          @scope = To.javascript(with)
+          @scope = Rhino.to_javascript(with)
           @scope.setParentScope(@global)
         else
           @scope = @global
@@ -92,15 +92,15 @@ module Rhino
     def eval(source, source_name = "<eval>", line_number = 1)
       self.open do
         begin
-          scope = To.javascript(@scope)
+          scope = Rhino.to_javascript(@scope)
           if IO === source || StringIO === source
             result = @native.evaluateReader(scope, IOReader.new(source), source_name, line_number, nil)
           else
             result = @native.evaluateString(scope, source.to_s, source_name, line_number, nil)
           end
-          To.ruby result
+          Rhino.to_ruby(result)
         rescue JS::RhinoException => e
-          raise Rhino::JavascriptError, e
+          raise JavascriptError, e
         end
       end
     end
