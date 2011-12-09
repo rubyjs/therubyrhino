@@ -92,5 +92,18 @@ module Rhino
       ids.to_java
     end
     
+    # protected Object ScriptableObject#equivalentValues(Object value)
+    def equivalentValues(other) # JS == operator
+      other.is_a?(RubyObject) && unwrap.eql?(other.unwrap)
+    end
+    
+#    def equals(other)
+#      other.is_a?(RubyObject) && unwrap.eql?(other.unwrap)
+#    end
+#    
+#    def hashCode
+#      unwrap.hash
+#    end
+    
   end
 end

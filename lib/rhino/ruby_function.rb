@@ -26,5 +26,14 @@ module Rhino
       Rhino.to_javascript(result, scope)
     end
     
+    # protected Object ScriptableObject#equivalentValues(Object value)
+    def equivalentValues(other) # JS == operator
+      return false unless other.is_a?(RubyFunction)
+      return true if unwrap == other.unwrap
+      # Method.== does check if their bind to the same object
+      # JS == means they might be bind to different objects :
+      unwrap.to_s == other.unwrap.to_s # "#<Method: Foo#bar>"
+    end
+    
   end
 end
