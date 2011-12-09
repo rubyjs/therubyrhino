@@ -18,19 +18,30 @@ module Rhino
     end
   end
   
+  @@warnings = {}
+  
+  def self.warn(msg)
+    # only print out deprecation warnings once
+    if msg[0, 13] == '[DEPRECATION]'
+      return nil if @@warnings[msg]
+      @@warnings[msg] = true
+    end
+    super # Kernel.warn
+  end
+  
   module To
   
     extend self
 
     # @deprecated use {#to_ruby} instead
     def self.ruby(object)
-      warn "[DEPRECATION] `Rhino::To.ruby` is deprecated, use `Rhino.to_ruby` instead."
+      Rhino.warn "[DEPRECATION] `Rhino::To.ruby` is deprecated, use `Rhino.to_ruby` instead."
       to_ruby(object)
     end
 
     # @deprecated use {#to_javascript} instead
     def self.javascript(object, scope = nil) 
-      warn "[DEPRECATION] `Rhino::To.javascript` is deprecated, use `Rhino.to_javascript` instead."
+      Rhino.warn "[DEPRECATION] `Rhino::To.javascript` is deprecated, use `Rhino.to_javascript` instead."
       to_javascript(object, scope)
     end
   
