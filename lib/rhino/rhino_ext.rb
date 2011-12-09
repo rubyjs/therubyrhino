@@ -83,11 +83,11 @@ class Java::OrgMozillaJavascript::ScriptableObject
   def method_missing(name, *args)
     if ScriptableObject.hasProperty(self, name.to_s)
       begin
-        context = Context.enter
+        context = Rhino::JS::Context.enter
         js_args = Rhino.args_to_javascript(args, self) # scope == self
         ScriptableObject.callMethod(context, self, name.to_s, js_args)
       ensure
-        Context.exit
+        Rhino::JS::Context.exit
       end
     else
       super
@@ -119,27 +119,25 @@ end
 
 # The base class for all JavaScript function objects.
 class Java::OrgMozillaJavascript::BaseFunction
-
-  import "org.mozilla.javascript"
   
   alias_method :__call__, :call # Rhino's Function#call(a1, a2, a3, a4)
   
   # make JavaScript functions callable Ruby style e.g. `fn.call('42')`
   def call(*args)
-    context = Context.enter
+    context = Rhino::JS::Context.enter
     scope = getParentScope || context.initStandardObjects
     __call__(context, scope, scope, Rhino.args_to_javascript(args, scope))
   ensure
-    Context.exit
+    Rhino::JS::Context.exit
   end
   
   # use JavaScript functions constructors from Ruby as `fn.new`
   def new(*args)
-    context = Context.enter
+    context = Rhino::JS::Context.enter
     scope = getParentScope || context.initStandardObjects
     construct(context, scope, Rhino.args_to_javascript(args, scope))
   ensure
-    Context.exit
+    Rhino::JS::Context.exit
   end
   
 end
