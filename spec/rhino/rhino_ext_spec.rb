@@ -89,15 +89,27 @@ describe "NativeObject (scoped)" do
   
   it 'routes rhino methods' do
     @object.prototype.should == {}
-    @object.constructor.should == {}    
-  end
-  
-  it 'invokes JS method' do
-    @object.toLocaleString.should == '[object Object]'
+    @object.getTypeOf.should == 'object'
   end
   
   it 'raises on missing method' do
     lambda { @object.aMissingMethod }.should raise_error(NoMethodError)
+  end
+  
+  it 'invokes JS function' do
+    @object.hasOwnProperty('foo').should == false
+    @object.toLocaleString.should == '[object Object]'
+  end
+
+  it 'puts JS property' do
+    @object.has('foo', @object).should == false
+    @object.foo = 'bar'
+    @object.has('foo', @object).should == true
+  end
+
+  it 'gets JS property' do
+    @object.put('foo', @object, 42)
+    @object.foo.should == 42
   end
   
 end

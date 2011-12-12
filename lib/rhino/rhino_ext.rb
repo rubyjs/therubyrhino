@@ -41,15 +41,21 @@ class Java::OrgMozillaJavascript::ScriptableObject
   # outputs foo -> bar baz -> bang
   #
   def each
-    getAllIds.each { |id| yield id, Rhino.to_ruby(get(id, self)) }
+    each_raw { |key, val| yield key, Rhino.to_ruby(val) }
   end
-
+  
   def each_key
-    getAllIds.each { |id| yield id }
+    each_raw { |key, val| yield key }
   end
 
   def each_value
-    getAllIds.each { |id| yield Rhino.to_ruby(get(id, self)) }
+    each_raw { |key, val| yield Rhino.to_ruby(val) }
+  end
+  
+  def each_raw
+    for id in getAllIds do
+      yield id, get(id, self)
+    end
   end
   
   def keys
@@ -81,16 +87,29 @@ class Java::OrgMozillaJavascript::ScriptableObject
   
   # Delegate methods to JS object if possible when called from Ruby.
   def method_missing(name, *args)
-    if ScriptableObject.hasProperty(self, name.to_s)
-      begin
-        context = Rhino::JS::Context.enter
-        js_args = Rhino.args_to_javascript(args, self) # scope == self
-        ScriptableObject.callMethod(context, self, name.to_s, js_args)
-      ensure
-        Rhino::JS::Context.exit
-      end
+    s_name = name.to_s
+    if s_name[-1, 1] == '=' && args.size == 1 # writer -> JS put
+      self[ s_name[0...-1] ] =  args[0]
     else
-      super
+      property = ScriptableObject.getProperty(self, s_name)
+      if property && property != Scriptable::NOT_FOUND
+        if property.is_a?(Rhino::JS::Function)
+          begin
+            context = Rhino::JS::Context.enter
+            js_args = Rhino.args_to_javascript(args, self) # scope == self
+            Rhino.to_ruby property.call(context, self, s_name, js_args)
+          ensure
+            Rhino::JS::Context.exit
+          end
+        else
+          if args.size > 0
+            raise ArgumentError, "can't #{name}(#{args.join(', ')}) as '#{name}' is a property"
+          end
+          Rhino.to_ruby property
+        end
+      else
+        super
+      end
     end
   end
   
