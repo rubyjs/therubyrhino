@@ -3,7 +3,7 @@ require File.expand_path('../spec_helper', File.dirname(__FILE__))
 describe Rhino::RubyObject do
   
   it "unwraps a ruby object" do
-    rb_object = Rhino::RubyObject.new object = Object.new
+    rb_object = Rhino::RubyObject.wrap object = Object.new
     rb_object.unwrap.should be(object)
   end
 
@@ -11,12 +11,12 @@ describe Rhino::RubyObject do
   end
   
   it "returns the ruby class name" do
-    rb_object = Rhino::RubyObject.new UII.new
+    rb_object = Rhino::RubyObject.wrap UII.new
     rb_object.getClassName.should == UII.name
   end
   
   it "reports being a ruby object on toString" do
-    rb_object = Rhino::RubyObject.new UII.new
+    rb_object = Rhino::RubyObject.wrap UII.new
     rb_object.toString.should == '[ruby UII]'
   end
 
@@ -28,10 +28,10 @@ describe Rhino::RubyObject do
     def initialize
       @anAttr0 = nil
       @the_attr_1 = 'attr_1'
-      @an_attr_2 = 'an_attr_2'
+      @an_attr_2 = 'attr_2'
     end
     
-    def theMethod0; nil; end
+    def theMethod0; @theMethod0; end
     
     def a_method1; 1; end
     
@@ -40,11 +40,11 @@ describe Rhino::RubyObject do
   end
   
   it "gets methods and instance variables" do
-    rb_object = Rhino::RubyObject.new UII.new
+    rb_object = Rhino::RubyObject.wrap UII.new
     
-    rb_object.get('anAttr0', nil).should be_a(Rhino::RubyFunction)
-    rb_object.get('the_attr_1', nil).should be_a(Rhino::RubyFunction)
-    rb_object.get('an_attr_2', nil).should == 'an_attr_2'
+    rb_object.get('anAttr0', nil).should be_nil
+    rb_object.get('the_attr_1', nil).should == 'attr_1'
+    rb_object.get('an_attr_2', nil).should be(Rhino::JS::Scriptable::NOT_FOUND) # no reader
     
     [ 'theMethod0', 'a_method1', 'the_method_2' ].each do |name|
       rb_object.get(name, nil).should be_a(Rhino::RubyFunction)
@@ -54,11 +54,11 @@ describe Rhino::RubyObject do
   end
 
   it "has methods and instance variables" do
-    rb_object = Rhino::RubyObject.new UII.new
+    rb_object = Rhino::RubyObject.wrap UII.new
     
     rb_object.has('anAttr0', nil).should be_true
     rb_object.has('the_attr_1', nil).should be_true
-    rb_object.has('an_attr_2', nil).should be_true
+    rb_object.has('an_attr_2', nil).should be_false # no reader nor writer
     
     [ 'theMethod0', 'a_method1', 'the_method_2' ].each do |name|
       rb_object.has(name, nil).should be_true
@@ -70,7 +70,7 @@ describe Rhino::RubyObject do
   it "puts using attr writer" do
     start = mock('start')
     start.expects(:put).never
-    rb_object = Rhino::RubyObject.new UII.new
+    rb_object = Rhino::RubyObject.wrap UII.new
     
     rb_object.put('the_attr_1', start, 42)
     rb_object.the_attr_1.should == 42
@@ -79,24 +79,25 @@ describe Rhino::RubyObject do
   it "puts a non-existent attr (delegates to start)" do
     start = mock('start')
     start.expects(:put).once
-    rb_object = Rhino::RubyObject.new UII.new
+    rb_object = Rhino::RubyObject.wrap UII.new
     
     rb_object.put('nonExistingAttr', start, 42)
   end
 
   it "getIds include ruby class methods" do
-    rb_object = Rhino::RubyObject.new UII.new
+    rb_object = Rhino::RubyObject.wrap UII.new
     
-    [ 'anAttr0', 'the_attr_1', 'an_attr_2' ].each do |attr|
+    [ 'anAttr0', 'the_attr_1' ].each do |attr|
       rb_object.getIds.to_a.should include(attr)
     end
+    rb_object.getIds.to_a.should_not include('an_attr_2')
     [ 'theMethod0', 'a_method1', 'the_method_2' ].each do |method|
       rb_object.getIds.to_a.should include(method)
     end
   end
 
   it "getIds include ruby instance methods" do
-    rb_object = Rhino::RubyObject.new object = UII.new
+    rb_object = Rhino::RubyObject.wrap object = UII.new
     object.instance_eval do
       def foo; 'foo'; end
     end
@@ -105,7 +106,7 @@ describe Rhino::RubyObject do
   end
   
   it "getIds include writers as attr names" do
-    rb_object = Rhino::RubyObject.new object = UII.new
+    rb_object = Rhino::RubyObject.wrap object = UII.new
     
     rb_object.getIds.to_a.should include('the_attr_1')
     rb_object.getIds.to_a.should_not include('the_attr_1=')
