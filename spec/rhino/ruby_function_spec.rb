@@ -37,4 +37,39 @@ describe Rhino::RubyFunction do
     rb_function.call(context, scope, this, args).should be_a(Rhino::JS::NativeArray)
   end
   
+  it "returns correct arity and length" do
+    klass = Class.new(Object) do
+      def foo(a1, a2)
+        a1 || a2
+      end
+    end
+    rb_function = Rhino::RubyFunction.wrap klass.new.method(:foo)
+    rb_function.getArity.should == 2
+    rb_function.getLength.should == 2
+  end
+
+  describe 'with scope' do
+    
+    before do
+      factory = Rhino::JS::ContextFactory.new
+      context = nil
+      factory.call do |ctx|
+        context = ctx
+        @scope = context.initStandardObjects(nil, false)
+      end
+      factory.enterContext(context)
+    end
+
+    after do
+      Rhino::JS::Context.exit
+    end
+    
+    it "sets up correct prototype" do
+      rb_function = Rhino::RubyFunction.wrap 'foo'.method(:concat), @scope
+      rb_function.getPrototype.should_not be(nil)
+      rb_function.getPrototype.should be_a(Rhino::JS::Function)
+    end
+    
+  end
+  
 end

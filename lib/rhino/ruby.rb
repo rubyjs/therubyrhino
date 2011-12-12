@@ -5,13 +5,17 @@ module Rhino
     include JS::Wrapper
 
     # wrap an arbitrary (ruby) object
-    def self.wrap(object)
-      new(object)
+    def self.wrap(object, scope = nil)
+      new(object, scope)
     end
     
-    def initialize(object)
+    def initialize(object, scope)
       super()
       @ruby = object
+      if scope
+        JS::ScriptRuntime.setObjectProtoAndParent(self, scope)
+        setPrototype(JS::ScriptableObject.getObjectPrototype(scope)) unless getPrototype
+      end
     end
 
     # abstract Object Wrapper#unwrap();
@@ -42,7 +46,7 @@ module Rhino
               raise RubyFunction.wrap_error(e)
             end
           else
-            return RubyFunction.new(@ruby.method(name))
+            return RubyFunction.wrap(@ruby.method(name))
           end
         end
       end
@@ -94,17 +98,33 @@ module Rhino
   class RubyFunction < JS::BaseFunction
     
     # wrap a callable (Method/Proc)
-    def self.wrap(callable)
-      new(callable)
+    def self.wrap(callable, scope = nil)
+      new(callable, scope)
     end
     
     def self.wrap_error(e)
       JS::WrappedException.new(org.jruby.exceptions.RaiseException.new(e))
     end
     
-    def initialize(callable)
+    def initialize(callable, scope)
       super()
       @callable = callable
+      JS::ScriptRuntime.setFunctionProtoAndParent(self, scope) if scope
+    end
+    
+    # override int BaseFunction#getLength()
+    def getLength
+      @callable.arity
+    end
+    
+    # #deprecated int BaseFunction#getArity()
+    def getArity
+      getLength
+    end
+
+    # override String BaseFunction#getFunctionName()
+    def getFunctionName
+      @callable.is_a?(Proc) ? "" : @callable.name
     end
     
     def unwrap
@@ -148,12 +168,12 @@ module Rhino
     include JS::Wrapper
     
     # wrap a ruby class as as constructor function
-    def self.wrap(klass)
-      new(klass)
+    def self.wrap(klass, scope = nil)
+      new(klass, scope)
     end
     
-    def initialize(klass)
-      super(klass.method(:new))
+    def initialize(klass, scope)
+      super(klass.method(:new), scope)
       @klass = klass
     end
     

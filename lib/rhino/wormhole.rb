@@ -20,10 +20,10 @@ module Rhino
       when Array                 then array_to_javascript(object, scope)
       when Hash                  then hash_to_javascript(object, scope)
       when Time                  then time_to_javascript(object, scope)
-      when Proc, Method          then RubyFunction.wrap(object)
+      when Proc, Method          then RubyFunction.wrap(object, scope)
       when JS::Scriptable        then object
-      when Class                 then RubyConstructor.wrap(object)
-      else RubyObject.wrap(object)  
+      when Class                 then RubyConstructor.wrap(object, scope)
+      else RubyObject.wrap(object, scope)
       end
     end
 

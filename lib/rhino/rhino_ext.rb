@@ -89,7 +89,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
   def method_missing(name, *args)
     s_name = name.to_s
     if s_name[-1, 1] == '=' && args.size == 1 # writer -> JS put
-      self[ s_name[0...-1] ] =  args[0]
+      self[ s_name[0...-1] ] = args[0]
     else
       property = ScriptableObject.getProperty(self, s_name)
       if property && property != Scriptable::NOT_FOUND

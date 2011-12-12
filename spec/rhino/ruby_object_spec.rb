@@ -121,4 +121,28 @@ describe Rhino::RubyObject do
     rb_object.getIds.to_a.should_not include('foo=')
   end
   
+  describe 'with scope' do
+    
+    before do
+      factory = Rhino::JS::ContextFactory.new
+      context = nil
+      factory.call do |ctx|
+        context = ctx
+        @scope = context.initStandardObjects(nil, false)
+      end
+      factory.enterContext(context)
+    end
+
+    after do
+      Rhino::JS::Context.exit
+    end
+    
+    it "sets up correct prototype" do
+      rb_object = Rhino::RubyObject.wrap UII.new, @scope
+      rb_object.getPrototype.should_not be(nil)
+      rb_object.getPrototype.should be_a(Rhino::JS::NativeObject)
+    end
+    
+  end
+  
 end
