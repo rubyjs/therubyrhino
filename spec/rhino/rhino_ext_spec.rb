@@ -35,7 +35,7 @@ describe "NativeObject" do
     @object = Rhino::JS::NativeObject.new
   end
   
-  it_should_behave_like 'ScriptableObject'  
+  it_should_behave_like 'ScriptableObject'
   
 end
 

@@ -21,6 +21,14 @@ module Rhino
             else
               return Function.wrap(unwrap.method(name))
             end
+          elsif unwrap.respond_to?("#{name}=")
+            return nil # it does have the property but is non readable
+          end
+        end
+        # try [](name) method :
+        if unwrap.respond_to?(:'[]') && unwrap.method(:'[]').arity == 1
+          if value = unwrap[name]
+            return Rhino.to_javascript(value, self)
           end
         end
         super
@@ -35,6 +43,10 @@ module Rhino
             return true
           end
         end
+        # try [](name) method :
+        if unwrap.respond_to?(:'[]') && unwrap.method(:'[]').arity == 1
+          return true if unwrap[name]
+        end
         super
       end
 
@@ -45,6 +57,10 @@ module Rhino
           if unwrap.respond_to?(set_name = "#{name}=")
             return unwrap.send(set_name, Rhino.to_ruby(value))
           end
+        end
+        # try []=(name, value) method :
+        if unwrap.respond_to?(:'[]=') && unwrap.method(:'[]=').arity == 2
+          return unwrap[name] = Rhino.to_ruby(value)
         end
         super
       end
@@ -129,6 +145,10 @@ module Rhino
         JS::ScriptRuntime.setFunctionProtoAndParent(self, scope) if scope
       end
 
+      def unwrap
+        @callable
+      end
+      
       # override int BaseFunction#getLength()
       def getLength
         @callable.arity
@@ -142,10 +162,6 @@ module Rhino
       # override String BaseFunction#getFunctionName()
       def getFunctionName
         @callable.is_a?(Proc) ? "" : @callable.name
-      end
-
-      def unwrap
-        @callable
       end
 
       # protected Object ScriptableObject#equivalentValues(Object value)
@@ -189,6 +205,11 @@ module Rhino
         @klass
       end
 
+      # override int BaseFunction#getLength()
+      def getLength
+        @klass.instance_method(:initialize).arity
+      end
+      
       # override boolean Scriptable#hasInstance(Scriptable instance);
       def hasInstance(instance)
         return false unless instance
