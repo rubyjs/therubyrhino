@@ -131,7 +131,18 @@ module Rhino
       include Scriptable
       
       # wrap a callable (Method/Proc)
-      def self.wrap(callable, scope = nil)
+      def self.wrap(callable, scope = nil)      
+        # NOTE: === seems 'correctly' impossible without having multiple 
+        # instances of the 'same' wrapper function (even with an UnboundMethod), 
+        # suppose :
+        # 
+        #     var foo1 = one.foo;
+        #     var foo2 = two.foo;
+        #     foo1 === foo2; // expect 'same' reference
+        #     foo1(); foo2(); // one ref but different implicit 'this' objects
+        #
+        # returns different instances as obj1.method(:foo) != obj2.method(:foo)
+        #
         Rhino::Ruby.cache(callable) { new(callable, scope) }
       end
 

@@ -2,7 +2,7 @@
 # The base class for all JavaScript objects.
 class Java::OrgMozillaJavascript::ScriptableObject
   
-  import "org.mozilla.javascript"
+  include_package "org.mozilla.javascript"
   
   # get a property from this javascript object, where +k+ is a string or symbol
   # corresponding to the property name e.g.
@@ -117,7 +117,7 @@ end
 
 class Java::OrgMozillaJavascript::NativeObject
   
-  import "org.mozilla.javascript"
+  include_package "org.mozilla.javascript"
   
   def [](name)
     value = Rhino.to_ruby(ScriptableObject.getProperty(self, s_name = name.to_s))
@@ -155,6 +155,14 @@ class Java::OrgMozillaJavascript::BaseFunction
     context = Rhino::JS::Context.enter
     scope = getParentScope || context.initStandardObjects
     construct(context, scope, Rhino.args_to_javascript(args, scope))
+  ensure
+    Rhino::JS::Context.exit
+  end
+  
+  def methodcall(this, *args)
+    context = Rhino::JS::Context.enter
+    scope = getParentScope || context.initStandardObjects
+    __call__(context, scope, Rhino.to_javascript(this), Rhino.args_to_javascript(args, scope))
   ensure
     Rhino::JS::Context.exit
   end

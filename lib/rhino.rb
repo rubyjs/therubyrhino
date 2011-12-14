@@ -7,10 +7,10 @@ module Rhino
   # This module contains all the native Rhino objects implemented in Java
   # e.g. Rhino::JS::NativeObject # => org.mozilla.javascript.NativeObject
   module JS
-    import "org.mozilla.javascript"
+    include_package "org.mozilla.javascript"
     
     module Regexp
-      import "org.mozilla.javascript.regexp"
+      include_package "org.mozilla.javascript.regexp"
     end
     
   end
