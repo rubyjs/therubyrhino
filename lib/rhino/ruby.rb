@@ -162,7 +162,8 @@ module Rhino
       
       # override int BaseFunction#getLength()
       def getLength
-        @callable.arity
+        arity = @callable.arity
+        arity < 0 ? 0 : arity  # -1 for `lambda { 42 }`
       end
 
       # #deprecated int BaseFunction#getArity()
@@ -187,7 +188,16 @@ module Rhino
       # override Object BaseFunction#call(Context context, Scriptable scope, 
       #                                   Scriptable thisObj, Object[] args)
       def call(context, scope, this, args)
-        rb_args = Rhino.args_to_ruby(args.to_a)
+        args = args.to_a # java.lang.Object[] -> Array
+        # JS function style :
+        if (arity = @callable.arity) >= 0
+          if args.size > arity # omit 'redundant' arguments
+            args = args.slice(0, arity)
+          elsif arity > args.size # fill 'missing' arguments
+            (arity - args.size).times { args.push(nil) }
+          end
+        end
+        rb_args = Rhino.args_to_ruby(args)
         begin
           result = @callable.call(*rb_args)
         rescue => e
@@ -218,7 +228,8 @@ module Rhino
 
       # override int BaseFunction#getLength()
       def getLength
-        @klass.instance_method(:initialize).arity
+        arity = @klass.instance_method(:initialize).arity
+        arity < 0 ? 0 : arity  # -1 for `initialize(*args)`
       end
       
       # override boolean Scriptable#hasInstance(Scriptable instance);
@@ -231,7 +242,7 @@ module Rhino
     end
 
     def self.cache(key)
-      fetch(key) || write(key, yield)
+      fetch(key) || store(key, yield)
     end
     
     private
@@ -245,7 +256,7 @@ module Rhino
         ref ? ref.get : nil
       end
 
-      def self.write(key, value)
+      def self.store(key, value)
         @@cache.put(key, java.lang.ref.WeakReference.new(value)) if @@cache
         value
       end

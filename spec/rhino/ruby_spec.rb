@@ -255,6 +255,38 @@ describe Rhino::Ruby::Function do
     context = nil; scope = nil; this = nil; args = [].to_java
     rb_function.call(context, scope, this, args).should be_a(Rhino::JS::NativeArray)
   end
+
+  it "slices redundant args when delegating call" do
+    klass = Class.new(Object) do
+      def foo(a1)
+        a1
+      end
+    end
+    rb_function = Rhino::Ruby::Function.wrap method = klass.new.method(:foo)
+    context = nil; scope = nil; this = nil
+    
+    args = [ 1.to_java, 2.to_java, 3.to_java ].to_java; js_return = nil
+    lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
+    js_return.should == 1
+  end
+  
+  it "fills missing args when delegating call" do
+    klass = Class.new(Object) do
+      def foo(a1, a2)
+        [ a1, a2 ]
+      end
+    end
+    rb_function = Rhino::Ruby::Function.wrap method = klass.new.method(:foo)
+    context = nil; scope = nil; this = nil
+    
+    args = [ 1.to_java ].to_java; js_return = nil
+    lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
+    js_return.toArray.to_a.should == [ 1, nil ]
+
+    args = [ ].to_java; js_return = nil
+    lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
+    js_return.toArray.to_a.should == [ nil, nil ]
+  end
   
   it "returns correct arity and length" do
     klass = Class.new(Object) do
@@ -267,6 +299,15 @@ describe Rhino::Ruby::Function do
     rb_function.getLength.should == 2
   end
 
+  it "reports arity and length of 0 for varargs" do
+    klass = Class.new(Object) do
+      def foo(*args); args; end
+    end
+    rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
+    rb_function.getArity.should == 0
+    rb_function.getLength.should == 0
+  end
+  
   describe 'with scope' do
     
     before do
@@ -326,6 +367,15 @@ describe Rhino::Ruby::Constructor do
     rb_new.getLength.should == 0
   end
 
+  it "reports arity and length of 0 for varargs" do
+    klass = Class.new do
+      def initialize(*args); args; end
+    end
+    rb_new = Rhino::Ruby::Constructor.wrap klass
+    rb_new.getArity.should == 0
+    rb_new.getLength.should == 0
+  end
+  
   describe 'with scope' do
     
     before do
