@@ -8,61 +8,19 @@ module Rhino
       # override Object Scriptable#get(String name, Scriptable start);
       # override Object Scriptable#get(int index, Scriptable start);
       def get(name, start)
-        if name.is_a?(String)
-          if unwrap.respond_to?(name)
-            method = unwrap.method(name)
-            if method.arity == 0 && # check if it is an attr_reader
-              ( unwrap.respond_to?("#{name}=") || unwrap.instance_variables.include?("@#{name}") )
-              begin
-                return Rhino.to_javascript(method.call, self)
-              rescue => e
-                raise Function.wrap_error(e)
-              end
-            else
-              return Function.wrap(unwrap.method(name))
-            end
-          elsif unwrap.respond_to?("#{name}=")
-            return nil # it does have the property but is non readable
-          end
-        end
-        # try [](name) method :
-        if unwrap.respond_to?(:'[]') && unwrap.method(:'[]').arity == 1
-          if value = unwrap[name]
-            return Rhino.to_javascript(value, self)
-          end
-        end
-        super
+        access.get(unwrap, name) { super }
       end
 
       # override boolean Scriptable#has(String name, Scriptable start);
       # override boolean Scriptable#has(int index, Scriptable start);
       def has(name, start)
-        if name.is_a?(String) 
-          if unwrap.respond_to?(name) || 
-             unwrap.respond_to?("#{name}=") # might have a writer but no reader
-            return true
-          end
-        end
-        # try [](name) method :
-        if unwrap.respond_to?(:'[]') && unwrap.method(:'[]').arity == 1
-          return true if unwrap[name]
-        end
-        super
+        access.has(unwrap, name) { super }
       end
 
       # override void Scriptable#put(String name, Scriptable start, Object value);
       # override void Scriptable#put(int index, Scriptable start, Object value);
       def put(name, start, value)
-        if name.is_a?(String)
-          if unwrap.respond_to?(set_name = "#{name}=")
-            return unwrap.send(set_name, Rhino.to_ruby(value))
-          end
-        end
-        # try []=(name, value) method :
-        if unwrap.respond_to?(:'[]=') && unwrap.method(:'[]=').arity == 2
-          return unwrap[name] = Rhino.to_ruby(value)
-        end
-        super
+        access.put(unwrap, name, value) { super }
       end
       
       # override Object[] Scriptable#getIds();
@@ -76,6 +34,22 @@ module Rhino
         super.each { |id| ids.unshift(id) }
         ids.to_java
       end
+      
+      @@access = nil
+      
+      def self.access=(access)
+        @@access = access
+      end
+      
+      def self.access
+        @@access ||= Rhino::Ruby::DefaultAccess
+      end
+      
+      private
+      
+        def access
+          Scriptable.access
+        end
       
     end
     
