@@ -146,17 +146,17 @@ describe Rhino::Ruby::Object do
     rb_object.put('nonExistingAttr', start, 42)
   end
 
-  it "getIds include ruby class methods" do
-    rb_object = Rhino::Ruby::Object.wrap UII.new
-    
-    [ 'anAttr0', 'the_attr_1' ].each do |attr|
-      rb_object.getIds.to_a.should include(attr)
-    end
-    rb_object.getIds.to_a.should_not include('an_attr_2')
-    [ 'theMethod0', 'a_method1', 'the_method_2' ].each do |method|
-      rb_object.getIds.to_a.should include(method)
-    end
-  end
+#  it "getIds include ruby class methods" do
+#    rb_object = Rhino::Ruby::Object.wrap UII.new
+#    
+#    [ 'anAttr0', 'the_attr_1' ].each do |attr|
+#      rb_object.getIds.to_a.should include(attr)
+#    end
+#    rb_object.getIds.to_a.should_not include('an_attr_2')
+#    [ 'theMethod0', 'a_method1', 'the_method_2' ].each do |method|
+#      rb_object.getIds.to_a.should include(method)
+#    end
+#  end
 
   it "getIds include ruby instance methods" do
     rb_object = Rhino::Ruby::Object.wrap object = UII.new
@@ -276,7 +276,7 @@ describe Rhino::Ruby::Function do
         [ a1, a2 ]
       end
     end
-    rb_function = Rhino::Ruby::Function.wrap method = klass.new.method(:foo)
+    rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
     context = nil; scope = nil; this = nil
     
     args = [ 1.to_java ].to_java; js_return = nil
@@ -286,6 +286,32 @@ describe Rhino::Ruby::Function do
     args = [ ].to_java; js_return = nil
     lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
     js_return.toArray.to_a.should == [ nil, nil ]
+  end
+  
+  it "fills missing args when delegating call that ends with varargs" do
+    klass = Class.new(Object) do
+      def foo(a1, a2, *args)
+        [ a1, a2, args ].flatten
+      end
+    end
+    rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
+    context = nil; scope = nil; this = nil
+
+    args = [ ].to_java; js_return = nil
+    lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
+    js_return.toArray.to_a.should == [ nil, nil ]
+    
+    args = [ 1.to_java ].to_java; js_return = nil
+    lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
+    js_return.toArray.to_a.should == [ 1, nil ]
+
+    args = [ 1.to_java, 2.to_java ].to_java; js_return = nil
+    lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
+    js_return.toArray.to_a.should == [ 1, 2 ]
+    
+    args = [ 1.to_java, 2.to_java, 3.to_java ].to_java; js_return = nil
+    lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
+    js_return.toArray.to_a.should == [ 1, 2, 3 ]
   end
   
   it "returns correct arity and length" do
@@ -299,13 +325,22 @@ describe Rhino::Ruby::Function do
     rb_function.getLength.should == 2
   end
 
-  it "reports arity and length of 0 for varargs" do
+  it "reports arity and length of 0 for varargs only method" do
     klass = Class.new(Object) do
       def foo(*args); args; end
     end
     rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
     rb_function.getArity.should == 0
     rb_function.getLength.should == 0
+  end
+  
+  it "reports correct arity and length for ending varargs" do
+    klass = Class.new(Object) do
+      def foo(a1, *args); [ a1, args ]; end
+    end
+    rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
+    rb_function.getArity.should == 1
+    rb_function.getLength.should == 1
   end
   
   describe 'with scope' do
@@ -392,7 +427,7 @@ describe Rhino::Ruby::Constructor do
       Rhino::JS::Context.exit
     end
     
-    it "sets up correct prototype" do
+    it "has a function prototype" do
       rb_function = Rhino::Ruby::Function.wrap 'foo'.method(:concat), @scope
       rb_function.getPrototype.should_not be(nil)
       rb_function.getPrototype.should be_a(Rhino::JS::Function)

@@ -101,7 +101,7 @@ module Rhino
 
       # abstract String Scriptable#getClassName();
       def getClassName
-        @ruby.class.name
+        @ruby.class.to_s # to_s handles 'nameless' classes as well
       end
 
       def toString
@@ -112,6 +112,7 @@ module Rhino
       def equivalentValues(other) # JS == operator
         other.is_a?(Object) && unwrap.eql?(other.unwrap)
       end
+      alias_method :'==', :equivalentValues
 
       # override Scriptable Scriptable#getPrototype();
       def getPrototype
@@ -131,7 +132,7 @@ module Rhino
       include Scriptable
       
       # wrap a callable (Method/Proc)
-      def self.wrap(callable, scope = nil)      
+      def self.wrap(callable, scope = nil)
         # NOTE: === seems 'correctly' impossible without having multiple 
         # instances of the 'same' wrapper function (even with an UnboundMethod), 
         # suppose :
@@ -163,7 +164,7 @@ module Rhino
       # override int BaseFunction#getLength()
       def getLength
         arity = @callable.arity
-        arity < 0 ? 0 : arity  # -1 for `lambda { 42 }`
+        arity < 0 ? ( arity + 1 ).abs : arity
       end
 
       # #deprecated int BaseFunction#getArity()
@@ -184,16 +185,18 @@ module Rhino
         # JS == means they might be bind to different objects :
         unwrap.to_s == other.unwrap.to_s # "#<Method: Foo#bar>"
       end
+      alias_method :'==', :equivalentValues
 
       # override Object BaseFunction#call(Context context, Scriptable scope, 
       #                                   Scriptable thisObj, Object[] args)
       def call(context, scope, this, args)
         args = args.to_a # java.lang.Object[] -> Array
         # JS function style :
-        if (arity = @callable.arity) >= 0
-          if args.size > arity # omit 'redundant' arguments
+        if ( arity = @callable.arity ) != -1 # (a1, *a).arity == -2
+          if arity > -1 && args.size > arity # omit 'redundant' arguments
             args = args.slice(0, arity)
-          elsif arity > args.size # fill 'missing' arguments
+          elsif arity > args.size || # fill 'missing' arguments
+              ( arity < -1 && (arity = arity.abs - 1) > args.size )
             (arity - args.size).times { args.push(nil) }
           end
         end
@@ -229,7 +232,7 @@ module Rhino
       # override int BaseFunction#getLength()
       def getLength
         arity = @klass.instance_method(:initialize).arity
-        arity < 0 ? 0 : arity  # -1 for `initialize(*args)`
+        arity < 0 ? ( arity + 1 ).abs : arity
       end
       
       # override boolean Scriptable#hasInstance(Scriptable instance);
@@ -242,6 +245,7 @@ module Rhino
     end
 
     def self.cache(key)
+      return yield unless @@cache
       fetch(key) || store(key, yield)
     end
     
@@ -252,12 +256,12 @@ module Rhino
       @@cache = java.util.WeakHashMap.new
     
       def self.fetch(key)
-        ref = @@cache && @@cache.get(key)
+        ref = @@cache.get(key)
         ref ? ref.get : nil
       end
 
       def self.store(key, value)
-        @@cache.put(key, java.lang.ref.WeakReference.new(value)) if @@cache
+        @@cache.put(key, java.lang.ref.WeakReference.new(value))
         value
       end
     
