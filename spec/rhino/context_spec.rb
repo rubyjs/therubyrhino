@@ -25,7 +25,7 @@ describe Rhino::Context do
 
     it "allows you to scope the context to an object" do
       class MyScope
-        def foo; 'bar'; end
+        def foo(*args); args && 'bar'; end
       end
       Rhino::Context.open(:with => MyScope.new) do |ctx|
         ctx.eval("foo()").should == 'bar'

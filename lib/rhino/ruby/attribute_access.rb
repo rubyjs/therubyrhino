@@ -1,10 +1,10 @@
 module Rhino
   module Ruby
-    module DefaultAccess
+    module AttributeAccess
       
       def self.has(object, name, scope)
         if object.respond_to?(name.to_s) || 
-           object.respond_to?("#{name}=")
+           object.respond_to?("#{name}=") # might have a writer but no reader
           return true
         end
         # try [](name) method :
@@ -17,7 +17,8 @@ module Rhino
       def self.get(object, name, scope)
         if object.respond_to?(name_s = name.to_s)
           method = object.method(name_s)
-          if method.arity == 0
+          if method.arity == 0 && # check if it is an attr_reader
+            ( object.respond_to?("#{name}=") || object.instance_variables.include?("@#{name}") )
             begin
               return Rhino.to_javascript(method.call, scope)
             rescue => e
@@ -27,7 +28,7 @@ module Rhino
             return Function.wrap(method)
           end
         elsif object.respond_to?("#{name}=")
-          return nil
+          return nil # it does have the property but is non readable
         end
         # try [](name) method :
         if object.respond_to?(:'[]') && object.method(:'[]').arity == 1

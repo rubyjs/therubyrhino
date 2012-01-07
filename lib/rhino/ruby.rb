@@ -2,19 +2,23 @@
 module Rhino
   module Ruby
     
+    def self.wrap_error(e)
+      JS::WrappedException.new(org.jruby.exceptions.RaiseException.new(e))
+    end
+    
     # shared JS::Scriptable implementation
     module Scriptable
       
       # override Object Scriptable#get(String name, Scriptable start);
       # override Object Scriptable#get(int index, Scriptable start);
       def get(name, start)
-        access.get(unwrap, name) { super }
+        access.get(unwrap, name, self) { super }
       end
 
       # override boolean Scriptable#has(String name, Scriptable start);
       # override boolean Scriptable#has(int index, Scriptable start);
       def has(name, start)
-        access.has(unwrap, name) { super }
+        access.has(unwrap, name, self) { super }
       end
 
       # override void Scriptable#put(String name, Scriptable start, Object value);
@@ -62,10 +66,12 @@ module Rhino
         Rhino::Ruby.cache(object) { new(object, scope) }
       end
 
+      TYPE = JS::TopLevel::Builtins::Object
+      
       def initialize(object, scope)
         super()
         @ruby = object
-        @scope = scope
+        JS::ScriptRuntime.setBuiltinProtoAndParent(self, scope, TYPE) if scope
       end
 
       # abstract Object Wrapper#unwrap();
@@ -87,18 +93,6 @@ module Rhino
         other.is_a?(Object) && unwrap.eql?(other.unwrap)
       end
       alias_method :'==', :equivalentValues
-
-      # override Scriptable Scriptable#getPrototype();
-      def getPrototype
-        # TODO needs to be revisited to that ruby.constructor works ...
-        if ! (proto = super) && @scope
-          JS::ScriptRuntime.setObjectProtoAndParent(self, @scope)
-          unless proto = super
-            setPrototype(proto = JS::ScriptableObject.getObjectPrototype(@scope))
-          end
-        end
-        proto
-      end
       
     end
 
@@ -118,11 +112,7 @@ module Rhino
         #
         # returns different instances as obj1.method(:foo) != obj2.method(:foo)
         #
-        Rhino::Ruby.cache(callable) { new(callable, scope) }
-      end
-
-      def self.wrap_error(e)
-        JS::WrappedException.new(org.jruby.exceptions.RaiseException.new(e))
+        new(callable, scope)
       end
 
       def initialize(callable, scope)
@@ -179,7 +169,7 @@ module Rhino
           result = @callable.call(*rb_args)
         rescue => e
           # ... correct wrapping thus it's try { } catch (e) works in JS :
-          raise self.class.wrap_error(e)
+          raise Rhino::Ruby.wrap_error(e)
         end
         Rhino.to_javascript(result, scope)
       end
