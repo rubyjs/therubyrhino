@@ -96,8 +96,9 @@ class Java::OrgMozillaJavascript::ScriptableObject
         if property.is_a?(Rhino::JS::Function)
           begin
             context = Rhino::JS::Context.enter
+            scope = current_scope(context)
             js_args = Rhino.args_to_javascript(args, self) # scope == self
-            Rhino.to_ruby property.call(context, self, s_name, js_args)
+            Rhino.to_ruby property.__call__(context, scope, self, js_args)
           ensure
             Rhino::JS::Context.exit
           end
@@ -112,6 +113,12 @@ class Java::OrgMozillaJavascript::ScriptableObject
       end
     end
   end
+  
+  protected
+  
+    def current_scope(context)
+      getParentScope || context.initStandardObjects
+    end
   
 end
 
@@ -139,29 +146,27 @@ end
 # The base class for all JavaScript function objects.
 class Java::OrgMozillaJavascript::BaseFunction
   
-  alias_method :__call__, :call # Rhino's Function#call(a1, a2, a3, a4)
+  # Object call(Context context, Scriptable scope, Scriptable this, Object[] args)
+  alias_method :__call__, :call
   
   # make JavaScript functions callable Ruby style e.g. `fn.call('42')`
   def call(*args)
-    context = Rhino::JS::Context.enter
-    scope = getParentScope || context.initStandardObjects
-    __call__(context, scope, scope, Rhino.args_to_javascript(args, scope))
+    context = Rhino::JS::Context.enter; scope = current_scope(context)
+    __call__(context, scope, nil, Rhino.args_to_javascript(args, scope))
   ensure
     Rhino::JS::Context.exit
   end
   
   # use JavaScript functions constructors from Ruby as `fn.new`
   def new(*args)
-    context = Rhino::JS::Context.enter
-    scope = getParentScope || context.initStandardObjects
+    context = Rhino::JS::Context.enter; scope = current_scope(context)
     construct(context, scope, Rhino.args_to_javascript(args, scope))
   ensure
     Rhino::JS::Context.exit
   end
   
   def methodcall(this, *args)
-    context = Rhino::JS::Context.enter
-    scope = getParentScope || context.initStandardObjects
+    context = Rhino::JS::Context.enter; scope = current_scope(context)
     __call__(context, scope, Rhino.to_javascript(this), Rhino.args_to_javascript(args, scope))
   ensure
     Rhino::JS::Context.exit

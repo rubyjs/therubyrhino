@@ -17,11 +17,11 @@ module Rhino
       when NilClass              then object
       when String, Numeric       then object
       when TrueClass, FalseClass then object
+      when JS::Scriptable        then object
       when Array                 then array_to_javascript(object, scope)
       when Hash                  then hash_to_javascript(object, scope)
       when Time                  then time_to_javascript(object, scope)
       when Proc, Method          then RubyFunction.wrap(object, scope)
-      when JS::Scriptable        then object
       when Class                 then RubyConstructor.wrap(object, scope)
       else RubyObject.wrap(object, scope)
       end
