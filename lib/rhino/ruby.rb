@@ -207,27 +207,11 @@ module Rhino
       end
 
     end
-
-    def self.cache(key)
-      return yield unless @@cache
-      fetch(key) || store(key, yield)
+    
+    def self.cache(key, &block)
+      context = JS::Context.getCurrentContext
+      context ? context.cache(key, &block) : yield
     end
-    
-    private
-    
-      # NOTE: just to get === comparison's working ...
-      # if == is enough might be disabled by setting to nil
-      @@cache = java.util.WeakHashMap.new
-    
-      def self.fetch(key)
-        ref = @@cache.get(key)
-        ref ? ref.get : nil
-      end
-
-      def self.store(key, value)
-        @@cache.put(key, java.lang.ref.WeakReference.new(value))
-        value
-      end
     
   end
   

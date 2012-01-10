@@ -173,3 +173,43 @@ class Java::OrgMozillaJavascript::BaseFunction
   end
   
 end
+
+class Java::OrgMozillaJavascript::Context
+  
+  def reset_cache!
+    @cache = java.util.WeakHashMap.new
+  end
+
+  def enable_cache!
+    @cache = nil unless @cache
+  end
+
+  def disable_cache!
+    @cache = false
+  end
+  
+  # Support for caching JS data per context.
+  # e.g. to get === comparison's working ...
+  # 
+  # NOTE: the cache only works correctly for keys following Java identity !
+  #       (implementing #equals & #hashCode e.g. RubyStrings will work ...)
+  #
+  def cache(key)
+    return yield if @cache == false
+    reset_cache! unless @cache
+    fetch(key) || store(key, yield)
+  end
+    
+  private
+
+    def fetch(key)
+      ref = @cache.get(key)
+      ref ? ref.get : nil
+    end
+
+    def store(key, value)
+      @cache.put(key, java.lang.ref.WeakReference.new(value))
+      value
+    end
+    
+end
