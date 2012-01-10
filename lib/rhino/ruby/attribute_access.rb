@@ -25,7 +25,7 @@ module Rhino
               raise Rhino::Ruby.wrap_error(e)
             end
           else
-            return Function.wrap(method)
+            return Function.wrap(method.unbind)
           end
         elsif object.respond_to?("#{name}=")
           return nil # it does have the property but is non readable

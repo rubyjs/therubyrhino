@@ -125,12 +125,22 @@ module Rhino
       @factory.instruction_limit = limit
     end
 
+    def optimization_level
+      @native.getOptimizationLevel
+    end
+    
     # Set the optimization level that this context will use. This is sometimes necessary
     # in Rhino, if the bytecode size of the compiled javascript exceeds the 64KB limit.
     # By using the -1 optimization level, you tell Rhino to run in interpretative mode,
     # taking a hit to performance but escaping the Java bytecode limit.
     def optimization_level=(level)
-      @native.setOptimizationLevel(level)
+      if @native.class.isValidOptimizationLevel(level)
+        @native.setOptimizationLevel(level)
+        level
+      else
+        @native.setOptimizationLevel(0)
+        nil
+      end
     end
 
     # Get the JS interpreter version. 
@@ -191,7 +201,7 @@ module Rhino
       begin
         str = @io.read(length)
       rescue StandardError => e
-        raise java.io.IOException.new, "Failed reading from ruby IO object"
+        raise java.io.IOException.new("failed reading from ruby IO object")
       end
       if str.nil?
         return -1

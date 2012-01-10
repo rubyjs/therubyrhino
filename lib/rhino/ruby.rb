@@ -46,7 +46,7 @@ module Rhino
       end
       
       def self.access
-        @@access ||= Rhino::Ruby::DefaultAccess
+        @@access ||= Ruby::DefaultAccess
       end
       
       private
@@ -63,7 +63,7 @@ module Rhino
       
       # wrap an arbitrary (ruby) object
       def self.wrap(object, scope = nil)
-        Rhino::Ruby.cache(object) { new(object, scope) }
+        Ruby.cache(object) { new(object, scope) }
       end
 
       TYPE = JS::TopLevel::Builtins::Object
@@ -97,22 +97,14 @@ module Rhino
     end
 
     class Function < JS::BaseFunction
+      include JS::Wrapper
       include Scriptable
       
       # wrap a callable (Method/Proc)
       def self.wrap(callable, scope = nil)
-        # NOTE: === seems 'correctly' impossible without having multiple 
-        # instances of the 'same' wrapper function (even with an UnboundMethod), 
-        # suppose :
-        # 
-        #     var foo1 = one.foo;
-        #     var foo2 = two.foo;
-        #     foo1 === foo2; // expect 'same' reference
-        #     foo1(); foo2(); // one ref but different implicit 'this' objects
-        #
-        # returns different instances as obj1.method(:foo) != obj2.method(:foo)
-        #
-        new(callable, scope)
+        # NOTE: include JS::Wrapper & Ruby.cache(callable.to_s) guarantees === 
+        # in Rhino although if a bind Method gets passed it might get confusing
+        Ruby.cache(callable.to_s) { new(callable, scope) }
       end
 
       def initialize(callable, scope)
@@ -166,10 +158,15 @@ module Rhino
         end
         rb_args = Rhino.args_to_ruby(args)
         begin
-          result = @callable.call(*rb_args)
+          callable = 
+            if @callable.is_a?(UnboundMethod)
+              @callable.bind(Rhino.to_ruby(this))
+            else
+              @callable
+            end
+          result = callable.call(*rb_args)
         rescue => e
-          # ... correct wrapping thus it's try { } catch (e) works in JS :
-          raise Rhino::Ruby.wrap_error(e)
+          raise Ruby.wrap_error(e) # thus `try { } catch (e)` works in JS
         end
         Rhino.to_javascript(result, scope)
       end
@@ -181,7 +178,9 @@ module Rhino
 
       # wrap a ruby class as as constructor function
       def self.wrap(klass, scope = nil)
-        new(klass, scope)
+        # NOTE: caching here seems redundant since we implemented JS::Wrapper 
+        # and a ruby class objects seems always the same ref under JRuby ...
+        Ruby.cache(klass) { new(klass, scope) }
       end
 
       def initialize(klass, scope)
