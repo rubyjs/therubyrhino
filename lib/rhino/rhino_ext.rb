@@ -152,9 +152,20 @@ class Java::OrgMozillaJavascript::BaseFunction
   # make JavaScript functions callable Ruby style e.g. `fn.call('42')`
   def call(*args)
     context = Rhino::JS::Context.enter; scope = current_scope(context)
-    __call__(context, scope, nil, Rhino.args_to_javascript(args, scope))
+    # calling as a (var) stored function - no this === undefined "use strict"
+    # TODO can't pass Undefined.instance as this - it's not a Scriptable !?
+    this = Rhino::JS::ScriptRuntime.getGlobal(context)
+    __call__(context, scope, this, Rhino.args_to_javascript(args, scope))
   ensure
     Rhino::JS::Context.exit
+  end
+  
+  def bind(this, *args)
+    context = Rhino::JS::Context.enter; scope = current_scope(context)
+    args = Rhino.args_to_javascript(args, scope)
+    Rhino::JS::BoundFunction.new(context, scope, self, Rhino.to_javascript(this), args)
+  ensure
+    Rhino::JS::Context.exit    
   end
   
   # use JavaScript functions constructors from Ruby as `fn.new`
@@ -167,7 +178,8 @@ class Java::OrgMozillaJavascript::BaseFunction
   
   def methodcall(this, *args)
     context = Rhino::JS::Context.enter; scope = current_scope(context)
-    __call__(context, scope, Rhino.to_javascript(this), Rhino.args_to_javascript(args, scope))
+    args = Rhino.args_to_javascript(args, scope)
+    __call__(context, scope, Rhino.to_javascript(this), args)
   ensure
     Rhino::JS::Context.exit
   end

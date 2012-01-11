@@ -118,14 +118,14 @@ describe "NativeFunction" do
       
   before do
     factory = Rhino::JS::ContextFactory.new
-    context, scope = nil, nil
+    @context, @scope = nil, nil
     factory.call do |ctx|
-      context = ctx
-      scope = context.initStandardObjects(nil, false)
+      @context = ctx
+      @scope = @context.initStandardObjects(nil, false)
     end
-    factory.enterContext(context)
+    factory.enterContext(@context)
     
-    object = context.newObject(scope)
+    object = @context.newObject(@scope)
     @object = Rhino::JS::ScriptableObject.getProperty(object, 'toString')
     @object.instance_eval do
       def to_h_properties
@@ -141,7 +141,34 @@ describe "NativeFunction" do
   it_should_behave_like 'ScriptableObject'
   
   it 'is callable' do
-    @object.call.should == '[object Object]'
+    # NOTE: no implicit or bound this thus this === global
+    @object.call.should == '[object global]'
+  end
+  
+  it 'might be bind and called' do
+    @object.bind(@object).should be_a(Rhino::JS::Function)
+    @object.bind(@object).call.should == '[object Function]'
+  end
+  
+  it 'might be bind to a this context' do
+    @object.bind(@object).should be_a(Rhino::JS::Function)
+    @object.bind(@object).call.should == '[object Function]'
+  end
+
+  it 'might be bind to a this with args' do
+    array = @context.newArray(@scope, [].to_java)
+    push = Rhino::JS::ScriptableObject.getProperty(array, 'push')
+    
+    this = @context.newArray(@scope, [ 0 ].to_java)
+    push.bind(this, 1, 2).call(3, 4)
+    
+    this.length.should == 5
+    5.times { |i| this.get(i, this).should == i }
+  end
+  
+  it 'might be method-called' do
+    an_obj = @context.newObject(@scope)
+    @object.methodcall(an_obj).should == '[object Object]'
   end
   
 end
