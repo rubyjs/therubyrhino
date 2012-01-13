@@ -166,9 +166,22 @@ describe "NativeFunction" do
     5.times { |i| this.get(i, this).should == i }
   end
   
-  it 'might be method-called' do
+  it 'might be applied' do
     an_obj = @context.newObject(@scope)
-    @object.methodcall(an_obj).should == '[object Object]'
+    @object.apply(an_obj).should == '[object Object]'
+    
+    array = @context.newArray(@scope, [].to_java)
+    push = Rhino::JS::ScriptableObject.getProperty(array, 'splice')
+    
+    this = @context.newArray(@scope, [ 0, 3, 4 ].to_java)
+    push.apply(this, 1, 0, 1, 2)
+    
+    this.length.should == 5
+    5.times { |i| this.get(i, this).should == i }
+  end
+  
+  it 'might get method-called' do
+    @object.method(:apply).should == @object.method(:methodcall)
   end
   
 end

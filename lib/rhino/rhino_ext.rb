@@ -150,6 +150,10 @@ class Java::OrgMozillaJavascript::BaseFunction
   alias_method :__call__, :call
   
   # make JavaScript functions callable Ruby style e.g. `fn.call('42')`
+  # 
+  # NOTE: That invoking #call does not have the same semantics as
+  # JavaScript's Function#call but rather as Ruby's Method#call !
+  # Use #apply or #bind before calling to achieve the same effect.
   def call(*args)
     context = Rhino::JS::Context.enter; scope = current_scope(context)
     # calling as a (var) stored function - no this === undefined "use strict"
@@ -160,6 +164,7 @@ class Java::OrgMozillaJavascript::BaseFunction
     Rhino::JS::Context.exit
   end
   
+  # bind a JavaScript function into the given (this) context
   def bind(this, *args)
     context = Rhino::JS::Context.enter; scope = current_scope(context)
     args = Rhino.args_to_javascript(args, scope)
@@ -176,13 +181,19 @@ class Java::OrgMozillaJavascript::BaseFunction
     Rhino::JS::Context.exit
   end
   
-  def methodcall(this, *args)
+  # apply a function with the given context and (optional) arguments 
+  # e.g. `fn.apply(obj, 1, 2)`
+  # 
+  # NOTE: That #call from Ruby does not have the same semantics as
+  # JavaScript's Function#call but rather as Ruby's Method#call !
+  def apply(this, *args)
     context = Rhino::JS::Context.enter; scope = current_scope(context)
     args = Rhino.args_to_javascript(args, scope)
     __call__(context, scope, Rhino.to_javascript(this), args)
   ensure
     Rhino::JS::Context.exit
   end
+  alias_method :methodcall, :apply # V8::Function compatibility
   
 end
 
