@@ -171,6 +171,10 @@ module Rhino
         Rhino.to_javascript(result, scope)
       end
 
+      # make sure redefined :call is aliased not the one "inherited" from 
+      # JS::BaseFunction#call when invoking __call__ (@see rhino_ext.rb)
+      alias_method :__call__, :call
+      
     end
 
     class Constructor < Function
