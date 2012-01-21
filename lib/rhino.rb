@@ -1,11 +1,29 @@
+require 'java'
+
+require 'rhino/rhino-1.7R3.jar'
 
 module Rhino
-  require 'rhino/java'
-  require 'rhino/object'
-  require 'rhino/context'
-  require 'rhino/wormhole'
-  require 'rhino/ruby_object'
-  require 'rhino/ruby_function'
-  require 'rhino/native_object'
-  require 'rhino/native_function'
+  
+  # This module contains all the native Rhino objects implemented in Java
+  # e.g. Rhino::JS::NativeObject # => org.mozilla.javascript.NativeObject
+  module JS
+    include_package "org.mozilla.javascript"
+    
+    module Regexp
+      include_package "org.mozilla.javascript.regexp"
+    end
+    
+  end
+  
 end
+
+require 'rhino/wormhole'
+Rhino.extend Rhino::To
+
+require 'rhino/object'
+require 'rhino/context'
+require 'rhino/error'
+require 'rhino/rhino_ext'
+require 'rhino/ruby'
+require 'rhino/ruby/access'
+require 'rhino/deprecations'
