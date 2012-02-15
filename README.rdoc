@@ -47,18 +47,18 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
 
   Rhino::Context.open do |context|
     context["math"] = MyMath.new
-    context.eval("math.plus(20,22)") #=> 42
+    context.eval("math.plus(20, 22)") #=> 42
   end
   
 # make a ruby object *be* your javascript environment
   math = MyMath.new
   Rhino::Context.open(:with => math) do |context|
-    context.eval("plus(20,22)") #=> 42
+    context.eval("plus(20, 22)") #=> 42
   end
   
   #or the equivalent
   
-  math.eval_js("plus(20,22)")
+  math.eval_js("plus(20, 22)")
 
 # Configure your embedding setup
 
@@ -69,14 +69,25 @@ Embed the Mozilla Rhino Javascript interpreter into Ruby
   
   #Turn on Java integration from javascript (probably a bad idea)
   Rhino::Context.open(:java => true) do |context|
-    context.eval("java.lang.System.exit()") #it's dangerous!
+    context.eval("java.lang.System.exit()") # it's dangerous!
   end
 
   #limit the number of instructions that can be executed in order to prevent
   #rogue scripts
-  Rhino::Context.open do |context|
+  Rhino::Context.open(:restrictable => true) do |context|
     context.instruction_limit = 100000
-    context.eval("while (true);") # => Error!
+    context.eval("while (true);") # => Rhino::RunawayScriptError
+  end
+
+  #limit the time a script executes
+  #rogue scripts
+  Rhino::Context.open(:restrictable => true, :java => true) do |context|
+    context.timeout_limit = 1.5 # seconds
+    context.eval %Q{ 
+        for (var i = 0; i < 100; i++) {
+            java.lang.Thread.sleep(100);
+        }
+    } # => Rhino::ScriptTimeoutError
   end
 
 ==== Different ways of loading javascript source
@@ -91,6 +102,43 @@ In addition to just evaluating strings, you can also use streams such as files.
 # or load it by filename
   Rhino::Context.open do |context|
     context.load("mysource.js")
+  end
+
+==== Configurable Ruby access
+
+By default accessing Ruby objects from javascript is compatible with therubyracer:
+https://github.com/cowboyd/therubyracer/wiki/Accessing-Ruby-Objects-From-JavaScript
+
+Thus you end-up calling arbitrary no-arg methods as if they were javascript properties, 
+since instance accessors (properties) and methods (functions) are indistinguishable:
+
+  Rhino::Context.open do |context|
+    context['Time'] = Time
+    context.eval('Time.now')
+  end
+
+However, you can customize this behavior and there's another access implementation
+that attempts to mirror only attributes as properties as close as possible:
+
+  class Foo
+    attr_accessor :bar
+    
+    def initialize
+      @bar = "bar"
+    end
+    
+    def check_bar
+      bar == "bar"
+    end
+  end
+  
+  Rhino::Ruby::Scriptable.access = Rhino::Ruby::AttributeAccess
+  Rhino::Context.open do |context|
+    context['Foo'] = Foo
+    context.eval('var foo = new Foo()')
+    context.eval('foo.bar') # get property using reader
+    context.eval('foo.bar = null') # set property using writer
+    context.eval('foo.check_bar()') # called like a function
   end
 
 === Safe by default
@@ -135,7 +183,7 @@ exposed by default. E.g.
 
 (The MIT License)
 
-Copyright (c) 2009 Charles Lowell
+Copyright (c) 2009-2012 Charles Lowell
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
