@@ -65,5 +65,29 @@ describe Rhino::Context do
     context.version = '1.7'
     context.version.should == 1.7
   end
+
+  it "should have a (shared) factory by default" do
+    context1 = Rhino::Context.new
+    context1.factory.should_not be nil
+    context1.factory.should be_a(Rhino::JS::ContextFactory)
+    
+    context1.factory.should be Rhino::Context.default_factory
+    
+    context2 = Rhino::Context.new
+    context2.factory.should be context1.factory
+  end
+
+  it "allows limiting instruction count" do
+    context = Rhino::Context.new :restrictable => true
+    context.instruction_limit = 100
+    lambda {
+      context.eval %Q{ for (var i = 0; i < 100; i++) Number(i).toString(); }
+    }.should raise_error(Rhino::RunawayScriptError)
+    
+    context.instruction_limit = nil
+    lambda {
+      context.eval %Q{ for (var i = 0; i < 100; i++) Number(i).toString(); }
+    }.should_not raise_error(Rhino::RunawayScriptError)
+  end
   
 end
