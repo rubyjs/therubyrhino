@@ -202,7 +202,7 @@ module Rhino
     def version=(version)
       const = version.to_s.gsub('.', '_').upcase
       const = "VERSION_#{const}" if const[0, 7] != 'VERSION'
-      if JS::Context.constants.include?(const)
+      if JS::Context.constants.find { |c| c.to_s == const }
         const_value = JS::Context.const_get(const)
         @native.setLanguageVersion(const_value)
         const_value

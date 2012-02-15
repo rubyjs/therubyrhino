@@ -4,7 +4,7 @@ module Rhino
       
       def self.has(object, name, scope)
         if object.respond_to?(name.to_s) || 
-           object.respond_to?("#{name}=") # might have a writer but no reader
+           object.respond_to?(:"#{name}=") # might have a writer but no reader
           return true
         end
         # try [](name) method :
@@ -15,10 +15,12 @@ module Rhino
       end
       
       def self.get(object, name, scope)
-        if object.respond_to?(name_s = name.to_s)
-          method = object.method(name_s)
+        name_sym = name.to_s.to_sym
+        if object.respond_to?(name_sym)
+          method = object.method(name_sym)
           if method.arity == 0 && # check if it is an attr_reader
-            ( object.respond_to?("#{name}=") || object.instance_variables.include?("@#{name}") )
+            ( object.respond_to?(:"#{name}=") || 
+                object.instance_variables.find { |var| var.to_sym == :"@#{name}" } )
             begin
               return Rhino.to_javascript(method.call, scope)
             rescue => e
@@ -27,7 +29,7 @@ module Rhino
           else
             return Function.wrap(method.unbind)
           end
-        elsif object.respond_to?("#{name}=")
+        elsif object.respond_to?(:"#{name}=")
           return nil # it does have the property but is non readable
         end
         # try [](name) method :
@@ -40,7 +42,7 @@ module Rhino
       end
       
       def self.put(object, name, value)
-        if object.respond_to?(set_name = "#{name}=")
+        if object.respond_to?(set_name = :"#{name}=")
           return object.send(set_name, Rhino.to_ruby(value))
         end
         # try []=(name, value) method :
