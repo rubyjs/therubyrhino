@@ -148,9 +148,8 @@ module Rhino
       if restrictable?
         @native.instruction_limit = limit
       else
-        warn "setting an instruction_limit has no effect on this context, use " + 
-             "Context.open(:restricted => true) to gain a restrictable instance"
-        nil
+        raise "setting an instruction_limit has no effect on this context, use " + 
+              "Context.open(:restricted => true) to gain a restrictable instance"
       end
     end
 
@@ -166,9 +165,8 @@ module Rhino
       if restrictable?
         @native.timeout_limit = limit
       else
-        warn "setting an timeout_limit has no effect on this context, use " + 
-             "Context.open(:restricted => true) to gain a restrictable instance"
-        nil
+        raise "setting an timeout_limit has no effect on this context, use " + 
+              "Context.open(:restricted => true) to gain a restrictable instance"
       end
     end
     
