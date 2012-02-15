@@ -153,6 +153,24 @@ module Rhino
         nil
       end
     end
+
+    def timeout_limit
+      restrictable? ? @native.timeout_limit : false
+    end
+    
+    # Set the duration (in seconds e.g. 1.5) this context is allowed to execute.
+    # After the timeout passes (no matter if any JS has been evaluated) and this
+    # context is still attempted to run code, a #Rhino::ScriptTimeoutError will
+    # be raised.
+    def timeout_limit=(limit)
+      if restrictable?
+        @native.timeout_limit = limit
+      else
+        warn "setting an timeout_limit has no effect on this context, use " + 
+             "Context.open(:restricted => true) to gain a restrictable instance"
+        nil
+      end
+    end
     
     def optimization_level
       @native.getOptimizationLevel
@@ -260,16 +278,13 @@ module Rhino
     
     # protected void observeInstructionCount(Context context, int instructionCount)
     def observeInstructionCount(context, count)
-      if context.is_a?(Context)
-        context.instruction_count += count
-        context.check!
-      end
+      context.check!(count) if context.is_a?(Context)
     end
     
     # protected Object doTopCall(Callable callable, Context context, 
     #                            Scriptable scope, Scriptable thisObj, Object[] args)
     def doTopCall(callable, context, scope, this, args)
-      context.instruction_count = 0 if context.is_a?(Context)
+      context.reset! if context.is_a?(Context)
       super
     end
     
@@ -290,22 +305,61 @@ module Rhino
         @instruction_limit = limit
       end
 
-      attr_accessor :instruction_count
+      attr_reader :instruction_count
+      
+      TIMEOUT_INSTRUCTION_TRESHOLD = 42
+      
+      attr_reader :timeout_limit
+      
+      def timeout_limit=(limit) # in seconds
+        treshold = getInstructionObserverThreshold
+        if limit && (treshold == 0 || treshold > TIMEOUT_INSTRUCTION_TRESHOLD)
+          setInstructionObserverThreshold(TIMEOUT_INSTRUCTION_TRESHOLD)
+        end
+        @timeout_limit = limit
+      end
+      
+      attr_reader :start_time
+      
+      def check!(count = nil)
+        @instruction_count += count if count
+        check_instruction_limit!
+        check_timeout_limit!(count)
+      end
 
-      def check!
+      def check_instruction_limit!
         if instruction_limit && instruction_count > instruction_limit
           raise RunawayScriptError, "script exceeded allowable instruction count: #{instruction_limit}"
         end
       end
-
-      private
-
-        def reset!
-          self.instruction_count = 0
-          self.instruction_limit = nil
-          self
+      
+      def check_timeout_limit!(count = nil)
+        if timeout_limit
+          elapsed_time = Time.now.to_f - start_time.to_f
+          if elapsed_time > timeout_limit
+            raise ScriptTimeoutError, "script exceeded timeout: #{timeout_limit} seconds"
+          end
+          # adapt instruction treshold as needed :
+          if count
+            treshold = getInstructionObserverThreshold
+            if elapsed_time * 2 < timeout_limit
+              next_treshold_guess = treshold * 2
+              if instruction_limit && instruction_limit < next_treshold_guess
+                setInstructionObserverThreshold(instruction_limit)
+              else
+                setInstructionObserverThreshold(next_treshold_guess)
+              end
+            end
+          end
         end
-
+      end
+      
+      def reset!
+        @instruction_count = 0
+        @start_time = Time.now
+        self
+      end
+      
     end
     
   end
@@ -314,6 +368,9 @@ module Rhino
   end
 
   class RunawayScriptError < ContextError # :nodoc:
+  end
+
+  class ScriptTimeoutError < ContextError # :nodoc:
   end
   
 end

@@ -89,5 +89,55 @@ describe Rhino::Context do
       context.eval %Q{ for (var i = 0; i < 100; i++) Number(i).toString(); }
     }.should_not raise_error(Rhino::RunawayScriptError)
   end
+
+  it "allows a timeout limit per context" do
+    context1 = Rhino::Context.new :restrictable => true, :java => true
+    context1.timeout_limit = 0.3
+    
+    context2 = Rhino::Context.new :restrictable => true, :java => true
+    context2.timeout_limit = 0.3
+    
+    lambda {
+      context2.eval %Q{ 
+        var notDone = true; 
+        (function foo() { 
+          if (notDone) { 
+            notDone = false;
+            java.lang.Thread.sleep(300);
+            foo();
+          } 
+        })(); 
+      }
+    }.should raise_error(Rhino::ScriptTimeoutError)
+    
+    lambda {
+      context1.eval %Q{ 
+        var notDone = true; 
+        (function foo { 
+          if (notDone) { 
+            notDone = false;
+            java.lang.Thread.sleep(100);
+            foo();
+          } 
+        })(); 
+      }
+    }.should_not raise_error(Rhino::RunawayScriptError)
+  end
+  
+  it "allows instruction and timeout limits at the same time" do
+    context = Rhino::Context.new :restrictable => true, :java => true
+    context.timeout_limit = 0.5
+    context.instruction_limit = 10000
+    lambda {
+      context.eval %Q{ for (var i = 0; i < 100; i++) { java.lang.Thread.sleep(100); } }
+    }.should raise_error(Rhino::ScriptTimeoutError)
+    
+    context = Rhino::Context.new :restrictable => true, :java => true
+    context.timeout_limit = 0.5
+    context.instruction_limit = 1000
+    lambda {
+      context.eval %Q{ for (var i = 0; i < 100; i++) { java.lang.Thread.sleep(10); } }
+    }.should raise_error(Rhino::RunawayScriptError)
+  end
   
 end
