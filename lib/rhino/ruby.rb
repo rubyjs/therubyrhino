@@ -32,7 +32,7 @@ module Rhino
         ids = []
         unwrap.public_methods(false).each do |name| 
           name = name[0...-1] if name[-1, 1] == '=' # 'foo=' ... 'foo'
-          name = name.to_java # java.lang.String
+          name = name.to_s.to_java # java.lang.String
           ids << name unless ids.include?(name)
         end
         super.each { |id| ids.unshift(id) }
