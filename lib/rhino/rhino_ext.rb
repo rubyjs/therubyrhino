@@ -87,11 +87,11 @@ class Java::OrgMozillaJavascript::ScriptableObject
   
   # Delegate methods to JS object if possible when called from Ruby.
   def method_missing(name, *args)
-    s_name = name.to_s
-    if s_name[-1, 1] == '=' && args.size == 1 # writer -> JS put
-      self[ s_name[0...-1] ] = args[0]
+    name_str = name.to_s
+    if name_str[-1, 1] == '=' && args.size == 1 # writer -> JS put
+      self[ name_str[0...-1] ] = args[0]
     else
-      if property = self[s_name]
+      if property = self[name_str]
         if property.is_a?(Rhino::JS::Function)
           begin
             context = Rhino::JS::Context.enter
@@ -103,7 +103,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
           end
         else
           if args.size > 0
-            raise ArgumentError, "can't #{name}(#{args.join(', ')}) as '#{name}' is a property"
+            raise ArgumentError, "can't call '#{name_str}' with args: #{args.inspect} as it's a property"
           end
           Rhino.to_ruby property
         end
