@@ -5,14 +5,8 @@ module Rhino
     
     def initialize(native)
       @native = native # NativeException wrapping a Java Throwable
-    end
-
-    def message
-      cause ? cause.details : @native.to_s
-    end
-    
-    def to_s
-      super
+      message = value ? value : ( cause ? cause.details : @native )
+      super(message)
     end
     
     # most likely a Rhino::JS::JavaScriptException
@@ -20,6 +14,17 @@ module Rhino
       @native.respond_to?(:cause) ? @native.cause : nil
     end
 
+    def value
+      return @value if defined?(@value)
+      if cause.respond_to?(:value) # e.g. JavaScriptException.getValue
+        @value = cause.value
+      elsif ( unwrap = self.unwrap ) && unwrap.respond_to?(:value)
+        @value = unwrap.value
+      else
+        @value = nil
+      end
+    end
+    
     def unwrap
       return @unwrap if defined?(@unwrap)
       cause = self.cause
