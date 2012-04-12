@@ -149,7 +149,7 @@ module Rhino
         @native.instruction_limit = limit
       else
         raise "setting an instruction_limit has no effect on this context, use " + 
-              "Context.open(:restricted => true) to gain a restrictable instance"
+              "Context.open(:restrictable => true) to gain a restrictable instance"
       end
     end
 
@@ -166,7 +166,7 @@ module Rhino
         @native.timeout_limit = limit
       else
         raise "setting an timeout_limit has no effect on this context, use " + 
-              "Context.open(:restricted => true) to gain a restrictable instance"
+              "Context.open(:restrictable => true) to gain a restrictable instance"
       end
     end
     
