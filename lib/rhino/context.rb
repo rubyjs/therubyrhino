@@ -82,6 +82,7 @@ module Rhino
           end
         end
       end
+      yield(self) if block_given?
     end
     
     # Returns the ContextFactory used while creating this context.
