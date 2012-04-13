@@ -66,4 +66,37 @@ describe Rhino::Ruby::AttributeAccess do
     rb_object.the_attr_1.should == 42
   end
   
+  it "might set access as a symbol" do
+    prev_access = Rhino::Ruby::Scriptable.access
+    attr_access = Rhino::Ruby::AttributeAccess
+    module FooAccess; end
+    
+    begin
+      
+      Rhino::Ruby::Scriptable.access = nil
+      lambda {  
+        Rhino::Ruby::Scriptable.access = :attribute
+      }.should_not raise_error
+      Rhino::Ruby::Scriptable.access.should == attr_access
+      
+      Rhino::Ruby::Scriptable.access = nil
+      lambda {  
+        Rhino::Ruby::Scriptable.access = :attribute_access
+      }.should_not raise_error
+      Rhino::Ruby::Scriptable.access.should == attr_access
+
+      lambda {  
+        Rhino::Ruby::Scriptable.access = :foo
+      }.should_not raise_error
+      Rhino::Ruby::Scriptable.access.should == FooAccess
+
+      lambda {  
+        Rhino::Ruby::Scriptable.access = :bar
+      }.should raise_error
+      
+    ensure
+      Rhino::Ruby::Scriptable.access = prev_access
+    end
+  end
+  
 end
