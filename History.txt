@@ -1,3 +1,40 @@
+=== 1.73.2 2012-04-11
+
+* improve JSError#message + add JSError#value to reflect throw JS value
+* correctly convert hashes nested within arrays to_javascript (#12)
+* full jruby --1.9 compatibility
+* Context.default_factory - no longer use a new factory per context
+* restrictable limits now require Contex.new(:restrictable => true)
+* added Context#timeout_limit (to complete instruction_limit)
+
+=== 1.73.1 2011-11-28
+NOTE: this is a "major" code update from 1.73.0 with some incompatibilities 
+although keeping the bits backward compatible as much as possible :
+
+* add a JS:Function#apply to be used for calling functions from Ruby
+* add a JS:Function#bind usable with JS functions from Ruby
+* JS:Function#call should work similar to Method/Proc#call
+* customizable scriptable access module for resolving Ruby properties from JS 
+  with TRR compatible Ruby::DefaultAccess and a custom Ruby::AttributeAccess
+* implement JavaScript function style argument filling/slicing (for Ruby)
+* delegate to hash like method []/[]= when wrapped subject supports them
+* introduce Ruby::Constructor JS wrapper for Ruby classes
+* hande int JavaScript property resolution
+* make sure Time -> Date conversion happens as well
+* deprecate JavascriptError use JSError instead with a javascript_backtrace fix
+* avoid using Rhino::To.javascript instead use Rhino.to_javascript etc.
+* NativeObject/NativeFunction got removed to avoid wrapping - instead Rhino's 
+  "native" Java classes are customized using JRuby's Java integration
+* support for setting JS version via Context.version
+* Rhino::J gets deprecated it's now know as Rhino::JS
+
+=== 1.73.0 2011-11-28
+
+* upgrade to rhino-1.7R3
+* cache objects passed to context - same object passed twice ends up the same
+* properly map ruby Time objects to javascript Date
+* jruby --1.9 improvements
+
 === 1.72.8 2011-06-26
 * fix passing of options hash to ruby.
 
