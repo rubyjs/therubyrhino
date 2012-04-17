@@ -2,10 +2,6 @@
 module Rhino
   module Ruby
     
-    def self.wrap_error(e)
-      JS::WrappedException.new(org.jruby.exceptions.RaiseException.new(e))
-    end
-    
     # shared JS::Scriptable implementation
     module Scriptable
       
@@ -173,12 +169,12 @@ module Rhino
         begin
           callable = 
             if @callable.is_a?(UnboundMethod)
-              @callable.bind(Rhino.to_ruby(this))
+              @callable.bind(Rhino.to_ruby(this)) # might end up as TypeError
             else
               @callable
             end
           result = callable.call(*rb_args)
-        rescue => e
+        rescue StandardError => e
           raise Ruby.wrap_error(e) # thus `try { } catch (e)` works in JS
         end
         Rhino.to_javascript(result, scope)
@@ -227,6 +223,25 @@ module Rhino
     def self.cache(key, &block)
       context = JS::Context.getCurrentContext
       context ? context.cache(key, &block) : yield
+    end
+    
+    # "hack" for ruby errors so that they act as JS thrown objects
+    class Exception < JS::JavaScriptException
+      
+      def initialize(value)
+        super wrap_value(value)
+      end
+    
+      private
+      
+      def wrap_value(value)
+        value.is_a?(Object) ? value : Object.wrap(value)
+      end
+      
+    end
+    
+    def self.wrap_error(e)
+      Exception.new(e)
     end
     
   end
