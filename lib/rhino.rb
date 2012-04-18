@@ -17,6 +17,7 @@ module Rhino
   
 end
 
+require 'rhino/version'
 require 'rhino/wormhole'
 Rhino.extend Rhino::To
 
