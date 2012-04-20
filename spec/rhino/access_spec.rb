@@ -3,7 +3,7 @@ require File.expand_path('../spec_helper', File.dirname(__FILE__))
 describe Rhino::Ruby::AttributeAccess do
   
   before(:all) do
-    Rhino::Ruby::Scriptable.access = Rhino::Ruby::AttributeAccess
+    Rhino::Ruby::Scriptable.access = Rhino::Ruby::AttributeAccess.new
   end
   
   after(:all) do
@@ -68,8 +68,8 @@ describe Rhino::Ruby::AttributeAccess do
   
   it "might set access as a symbol" do
     prev_access = Rhino::Ruby::Scriptable.access
-    attr_access = Rhino::Ruby::AttributeAccess
-    module FooAccess; end
+    module FooAccess; end # backward compatibility
+    class Foo2Access; end
     
     begin
       
@@ -77,13 +77,13 @@ describe Rhino::Ruby::AttributeAccess do
       lambda {  
         Rhino::Ruby::Scriptable.access = :attribute
       }.should_not raise_error
-      Rhino::Ruby::Scriptable.access.should == attr_access
+      Rhino::Ruby::Scriptable.access.should be_a Rhino::Ruby::AttributeAccess
       
       Rhino::Ruby::Scriptable.access = nil
       lambda {  
         Rhino::Ruby::Scriptable.access = :attribute_access
       }.should_not raise_error
-      Rhino::Ruby::Scriptable.access.should == attr_access
+      Rhino::Ruby::Scriptable.access.should be_a Rhino::Ruby::AttributeAccess
 
       lambda {  
         Rhino::Ruby::Scriptable.access = :foo
@@ -91,12 +91,29 @@ describe Rhino::Ruby::AttributeAccess do
       Rhino::Ruby::Scriptable.access.should == FooAccess
 
       lambda {  
+        Rhino::Ruby::Scriptable.access = :foo2
+      }.should_not raise_error
+      Rhino::Ruby::Scriptable.access.should be_a Foo2Access
+      
+      lambda {  
         Rhino::Ruby::Scriptable.access = :bar
       }.should raise_error
       
     ensure
       Rhino::Ruby::Scriptable.access = prev_access
     end
+  end
+  
+  it "is backward compatibile with the 'module' way" do
+    Rhino::Ruby::AttributeAccess.respond_to?(:has).should be true
+    Rhino::Ruby::AttributeAccess.respond_to?(:get).should be true
+    Rhino::Ruby::AttributeAccess.respond_to?(:put).should be true
+    
+    Rhino::Ruby::Scriptable.access = Rhino::Ruby::AttributeAccess
+    
+    rb_object = Rhino::Ruby::Object.wrap Meh.new
+    rb_object.get('theMethod0', nil).should be_a(Rhino::Ruby::Function)
+    rb_object.has('non-existent-method', nil).should be false
   end
   
 end

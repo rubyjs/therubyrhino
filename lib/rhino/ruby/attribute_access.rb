@@ -1,56 +1,40 @@
 module Rhino
   module Ruby
-    module AttributeAccess
+    class AttributeAccess < AccessBase
       
-      def self.has(object, name, scope)
+      def has(object, name, scope)
         if object.respond_to?(name.to_s) || 
            object.respond_to?(:"#{name}=") # might have a writer but no reader
           return true
         end
-        # try [](name) method :
-        if object.respond_to?(:'[]') && object.method(:'[]').arity == 1
-          return true if object[name]
-        end
-        yield
+        super
       end
       
-      def self.get(object, name, scope)
+      def get(object, name, scope)
         name_sym = name.to_s.to_sym
         if object.respond_to?(name_sym)
           method = object.method(name_sym)
           if method.arity == 0 && # check if it is an attr_reader
             ( object.respond_to?(:"#{name}=") || 
                 object.instance_variables.find { |var| var.to_sym == :"@#{name}" } )
-            begin
-              return Rhino.to_javascript(method.call, scope)
-            rescue => e
-              raise Rhino::Ruby.wrap_error(e)
-            end
+            return Rhino.to_javascript(method.call, scope)
           else
             return Function.wrap(method.unbind)
           end
         elsif object.respond_to?(:"#{name}=")
           return nil # it does have the property but is non readable
         end
-        # try [](name) method :
-        if object.respond_to?(:'[]') && object.method(:'[]').arity == 1
-          if value = object[name]
-            return Rhino.to_javascript(value, scope)
-          end
-        end
-        yield
+        super
       end
       
-      def self.put(object, name, value)
+      def put(object, name, value)
         if object.respond_to?(set_name = :"#{name}=")
           return object.send(set_name, Rhino.to_ruby(value))
         end
-        # try []=(name, value) method :
-        if object.respond_to?(:'[]=') && object.method(:'[]=').arity == 2
-          return object[name] = Rhino.to_ruby(value)
-        end
-        yield
+        super
       end
+      
+      extend DeprecatedAccess # backward compatibility for a while
       
     end
   end

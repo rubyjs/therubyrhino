@@ -38,24 +38,27 @@ module Rhino
       @@access = nil
       
       def self.access=(access)
-        @@access = access.is_a?(Module) ? access : begin
-          if access # Scriptable.access = :attribute
-            name = access.to_s.chomp('_access')
-            name = name[0, 1].capitalize << name[1..-1]
-            name = :"#{name}Access"
-            if Ruby.const_defined?(name)
-              Ruby.const_get(name) # e.g. Rhino::Ruby::AttributeAccess
-            else
-              const_get(name) # e.g. Rhino::Ruby::Scriptable::FooAccess
-            end
-          else # nil, false
-            access
+        @@access = ( access.respond_to?(:get) && access.respond_to?(:put) ) ? access : 
+          begin
+            access = 
+              if access && ! access.is_a?(Class) # Scriptable.access = :attribute
+                name = access.to_s.chomp('_access')
+                name = name[0, 1].capitalize << name[1..-1]
+                name = :"#{name}Access"
+                if Ruby.const_defined?(name)
+                  Ruby.const_get(name) # e.g. Rhino::Ruby::AttributeAccess
+                else
+                  const_get(name) # e.g. Rhino::Ruby::Scriptable::FooAccess
+                end
+              else # nil, false, Class
+                access
+              end
+            access.is_a?(Class) ? access.new : access
           end
-        end
       end
       
       def self.access
-        @@access ||= Ruby::DefaultAccess
+        @@access ||= Ruby::DefaultAccess.new
       end
       
       private
@@ -87,7 +90,7 @@ module Rhino
       def unwrap
         @ruby
       end
-
+      
       # abstract String Scriptable#getClassName();
       def getClassName
         @ruby.class.to_s # to_s handles 'nameless' classes as well
