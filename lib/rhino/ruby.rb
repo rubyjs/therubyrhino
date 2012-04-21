@@ -5,38 +5,7 @@ module Rhino
     # shared JS::Scriptable implementation
     module Scriptable
       
-      # override Object Scriptable#get(String name, Scriptable start);
-      # override Object Scriptable#get(int index, Scriptable start);
-      def get(name, start)
-        access.get(unwrap, name, self) { super }
-      end
-
-      # override boolean Scriptable#has(String name, Scriptable start);
-      # override boolean Scriptable#has(int index, Scriptable start);
-      def has(name, start)
-        access.has(unwrap, name, self) { super }
-      end
-
-      # override void Scriptable#put(String name, Scriptable start, Object value);
-      # override void Scriptable#put(int index, Scriptable start, Object value);
-      def put(name, start, value)
-        access.put(unwrap, name, value) { super }
-      end
-      
-      # override Object[] Scriptable#getIds();
-      def getIds
-        ids = []
-        unwrap.public_methods(false).each do |name| 
-          name = name[0...-1] if name[-1, 1] == '=' # 'foo=' ... 'foo'
-          name = name.to_s.to_java # java.lang.String
-          ids << name unless ids.include?(name)
-        end
-        super.each { |id| ids.unshift(id) }
-        ids.to_java
-      end
-      
       @@access = nil
-      
       def self.access=(access)
         @@access = ( access.respond_to?(:get) && access.respond_to?(:put) ) ? access : 
           begin
@@ -61,11 +30,61 @@ module Rhino
         @@access ||= Ruby::DefaultAccess.new
       end
       
+      # override Object Scriptable#get(String name, Scriptable start);
+      # override Object Scriptable#get(int index, Scriptable start);
+      def get(name, start)
+        return nil if exclude?(name)
+        access.get(unwrap, name, self) { super }
+      end
+
+      # override boolean Scriptable#has(String name, Scriptable start);
+      # override boolean Scriptable#has(int index, Scriptable start);
+      def has(name, start)
+        return nil if exclude?(name)
+        access.has(unwrap, name, self) { super }
+      end
+
+      # override void Scriptable#put(String name, Scriptable start, Object value);
+      # override void Scriptable#put(int index, Scriptable start, Object value);
+      def put(name, start, value)
+        return nil if exclude?(name)
+        access.put(unwrap, name, value) { super }
+      end
+      
+      # override Object[] Scriptable#getIds();
+      def getIds
+        ids = []
+        unwrap.public_methods(false).each do |name| 
+          next unless name = convert(name)
+          name = name.to_s.to_java # java.lang.String
+          ids << name unless ids.include?(name)
+        end
+        super.each { |id| ids.unshift(id) }
+        ids.to_java
+      end
+      
       private
       
-        def access
-          Scriptable.access
+      def convert(name)
+        if exclude?(name)
+          nil
+        elsif name[-1, 1] == '='
+          name[0...-1]
+        else
+          name
         end
+      end
+      
+      FETCH = '[]'.freeze
+      STORE = '[]='.freeze
+      
+      def exclude?(name)
+        name == FETCH || name == STORE
+      end
+      
+      def access
+        Scriptable.access
+      end
       
     end
     

@@ -9,8 +9,10 @@ module Rhino
       def has(object, name, scope)
         # try [](name) method :
         if object.respond_to?(:'[]') && object.method(:'[]').arity == 1
-          value = object.[](name) { return true }
-          return true unless value.nil?
+          unless internal?(name)
+            value = object.[](name) { return true }
+            return true unless value.nil?
+          end
         end
         yield
       end
@@ -22,7 +24,7 @@ module Rhino
             object[name]
           rescue LocalJumpError
             nil
-          end
+          end unless internal?(name)
           return Rhino.to_javascript(value, scope) unless value.nil?
         end
         yield
@@ -35,9 +37,18 @@ module Rhino
           begin
             return object[name] = rb_value
           rescue LocalJumpError
-          end
+          end unless internal?(name)
         end
         yield
+      end
+      
+      private
+      
+      UNDERSCORES = '__'.freeze
+      
+      def internal?(name) # e.g. '__iterator__', '__proto__'
+        name.is_a?(String) && 
+          name[0..1] == UNDERSCORES && name[-2..-1] == UNDERSCORES
       end
       
     end
