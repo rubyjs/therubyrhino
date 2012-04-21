@@ -1,4 +1,14 @@
+=== 1.73.3 2012-xx-xx
+RedJS 0.4 compatible
+
+* support for yield in JS property access via the [], []= methods
+* refactor access implementations to classes + introduce a shared base
+* missing explicit require 'rhino/version'
+* Ruby StandardError wrapping so they can be try-catched as JS "error" values
+* Rhino::Context.new is expected to yield when block passed
+
 === 1.73.2 2012-04-11
+RedJS 0.2.1 compatible
 
 * improve JSError#message + add JSError#value to reflect throw JS value
 * correctly convert hashes nested within arrays to_javascript (#12)
