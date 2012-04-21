@@ -9,7 +9,8 @@ module Rhino
       def has(object, name, scope)
         # try [](name) method :
         if object.respond_to?(:'[]') && object.method(:'[]').arity == 1
-          return true unless object[name].nil?
+          value = object.[](name) { return true }
+          return true unless value.nil?
         end
         yield
       end
@@ -17,9 +18,12 @@ module Rhino
       def get(object, name, scope)
         # try [](name) method :
         if object.respond_to?(:'[]') && object.method(:'[]').arity == 1
-          unless (value = object[name]).nil?
-            return Rhino.to_javascript(value, scope)
+          value = begin
+            object[name]
+          rescue LocalJumpError
+            nil
           end
+          return Rhino.to_javascript(value, scope) unless value.nil?
         end
         yield
       end
@@ -27,7 +31,11 @@ module Rhino
       def put(object, name, value)
         # try []=(name, value) method :
         if object.respond_to?(:'[]=') && object.method(:'[]=').arity == 2
-          return object[name] = Rhino.to_ruby(value)
+          rb_value = Rhino.to_ruby(value)
+          begin
+            return object[name] = rb_value
+          rescue LocalJumpError
+          end
         end
         yield
       end

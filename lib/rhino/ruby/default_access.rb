@@ -4,7 +4,7 @@ module Rhino
       
       def has(object, name, scope)
         if object.respond_to?(name.to_s) || 
-           object.respond_to?("#{name}=")
+           object.respond_to?(:"#{name}=")
           return true
         end
         super
@@ -18,14 +18,14 @@ module Rhino
           else
             return Function.wrap(method.unbind)
           end
-        elsif object.respond_to?("#{name}=")
+        elsif object.respond_to?(:"#{name}=")
           return nil
         end
         super
       end
       
       def put(object, name, value)
-        if object.respond_to?(set_name = "#{name}=")
+        if object.respond_to?(set_name = :"#{name}=")
           return object.send(set_name, Rhino.to_ruby(value))
         end
         super

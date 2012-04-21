@@ -29,7 +29,8 @@ module Rhino
       
       def put(object, name, value)
         if object.respond_to?(set_name = :"#{name}=")
-          return object.send(set_name, Rhino.to_ruby(value))
+          rb_value = Rhino.to_ruby(value)
+          return object.send(set_name, rb_value)
         end
         super
       end
