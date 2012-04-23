@@ -1,6 +1,7 @@
 === 1.73.3 2012-xx-xx
 RedJS 0.4 compatible
 
+* allow try-catch-ing ScriptError (besides StandardError) in JS
 * support for yield in JS property access via the [], []= methods
 * refactor access implementations to classes + introduce a shared base
 * missing explicit require 'rhino/version'

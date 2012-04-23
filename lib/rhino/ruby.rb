@@ -196,7 +196,7 @@ module Rhino
               @callable
             end
           result = callable.call(*rb_args)
-        rescue StandardError => e
+        rescue StandardError, ScriptError => e
           raise Ruby.wrap_error(e) # thus `try { } catch (e)` works in JS
         end
         Rhino.to_javascript(result, scope)
