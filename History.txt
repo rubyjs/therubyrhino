@@ -1,4 +1,4 @@
-=== 1.73.3 2012-xx-xx
+=== 1.73.3 2012-04-23
 RedJS 0.4 compatible
 
 * allow try-catch-ing ScriptError (besides StandardError) in JS
@@ -19,13 +19,13 @@ RedJS 0.2.1 compatible
 * added Context#timeout_limit (to complete instruction_limit)
 
 === 1.73.1 2011-11-28
-NOTE: this is a "major" code update from 1.73.0 with some incompatibilities 
+NOTE: this is a "major" code update from 1.73.0 with some incompatibilities
 although keeping the bits backward compatible as much as possible :
 
 * add a JS:Function#apply to be used for calling functions from Ruby
 * add a JS:Function#bind usable with JS functions from Ruby
 * JS:Function#call should work similar to Method/Proc#call
-* customizable scriptable access module for resolving Ruby properties from JS 
+* customizable scriptable access module for resolving Ruby properties from JS
   with TRR compatible Ruby::DefaultAccess and a custom Ruby::AttributeAccess
 * implement JavaScript function style argument filling/slicing (for Ruby)
 * delegate to hash like method []/[]= when wrapped subject supports them
@@ -34,7 +34,7 @@ although keeping the bits backward compatible as much as possible :
 * make sure Time -> Date conversion happens as well
 * deprecate JavascriptError use JSError instead with a javascript_backtrace fix
 * avoid using Rhino::To.javascript instead use Rhino.to_javascript etc.
-* NativeObject/NativeFunction got removed to avoid wrapping - instead Rhino's 
+* NativeObject/NativeFunction got removed to avoid wrapping - instead Rhino's
   "native" Java classes are customized using JRuby's Java integration
 * support for setting JS version via Context.version
 * Rhino::J gets deprecated it's now know as Rhino::JS
