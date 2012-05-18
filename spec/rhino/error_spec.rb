@@ -78,7 +78,6 @@ describe Rhino::JSError do
     begin
       Rhino::Context.eval "throw 42"
     rescue => e
-      e.javascript_backtrace.should_not be nil
       e.javascript_backtrace.should be_a Enumerable
       e.javascript_backtrace.size.should == 1
       e.javascript_backtrace[0].should == "at <eval>:1"
@@ -89,6 +88,18 @@ describe Rhino::JSError do
       element.file_name.should == '<eval>'
       element.function_name.should be nil
       element.line_number.should == 1
+    else
+      fail "expected to rescue"
+    end
+  end
+
+  it "backtrace starts with the javascript part" do
+    begin
+      Rhino::Context.eval "throw 42"
+    rescue => e
+      e.backtrace.should be_a Array
+      e.backtrace[0].should == "at <eval>:1"
+      e.backtrace[1].should_not be nil
     else
       fail "expected to rescue"
     end

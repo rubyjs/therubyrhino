@@ -46,6 +46,14 @@ module Rhino
       end
     end
     
+    def backtrace
+      if js_backtrace = javascript_backtrace
+        js_backtrace.push(*super)
+      else
+        super
+      end
+    end
+    
     def javascript_backtrace(keep_elements = false)
       if cause.is_a?(JS::RhinoException)
         cause.getScriptStack.map do |element| # ScriptStackElement[]
