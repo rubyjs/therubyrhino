@@ -1,4 +1,3 @@
-
 module Rhino
 
   class JSError < StandardError
@@ -11,7 +10,14 @@ module Rhino
     
     # most likely a Rhino::JS::JavaScriptException
     def cause
-      @native.respond_to?(:cause) ? @native.cause : nil
+      return @cause if defined?(@cause)
+      @cause = begin
+        if @native.respond_to?(:cause) && @native.cause
+          @native.cause
+        else
+          @native.is_a?(JS::RhinoException) ? @native : nil
+        end
+      end
     end
 
     def value
@@ -40,9 +46,17 @@ module Rhino
       end
     end
     
-    def javascript_backtrace
-      cause.is_a?(JS::RhinoException) ? cause.getScriptStackTrace : nil
+    def javascript_backtrace(keep_elements = false)
+      if cause.is_a?(JS::RhinoException)
+        cause.getScriptStack.map do |element| # ScriptStackElement[]
+          keep_elements ? element : element.to_s
+        end
+      else
+        nil
+      end
     end
+    
+    Rhino::JS::RhinoException.useMozillaStackStyle(false)
     
   end
   

@@ -196,6 +196,21 @@ class Java::OrgMozillaJavascript::BaseFunction
   
 end
 
+class Java::OrgMozillaJavascript::ScriptStackElement
+  
+  def file_name; fileName; end # public final String fileName;
+  def function_name; functionName; end # public final String functionName;
+  def line_number; lineNumber; end # public final int lineNumber;
+  
+  def to_s
+    str = "at #{fileName}"
+    str << ':' << lineNumber.to_s if lineNumber > -1
+    str << " (#{funcionName})" if functionName
+    str
+  end
+  
+end
+
 class Java::OrgMozillaJavascript::Context
   
   CACHE = java.util.WeakHashMap.new

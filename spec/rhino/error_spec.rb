@@ -59,5 +59,39 @@ describe Rhino::JSError do
       fail "expected to rescue"
     end
   end
+
+  it "contains the native error as the cause" do
+    begin
+      Rhino::Context.eval "throw 42"
+    rescue => e
+      e.cause.should_not be nil
+      e.cause.should be_a Java::OrgMozillaJavascript::JavaScriptException
+      e.cause.getValue.should == 42
+      e.cause.lineNumber.should == 1
+      e.cause.sourceName.should == '<eval>'
+    else
+      fail "expected to rescue"
+    end
+  end
+  
+  it "has a correct javascript backtrace" do
+    begin
+      Rhino::Context.eval "throw 42"
+    rescue => e
+      e.javascript_backtrace.should_not be nil
+      e.javascript_backtrace.should be_a Enumerable
+      e.javascript_backtrace.size.should == 1
+      e.javascript_backtrace[0].should == "at <eval>:1"
+      
+      e.javascript_backtrace(true).should be_a Enumerable
+      e.javascript_backtrace(true).size.should == 1
+      element = e.javascript_backtrace(true)[0]
+      element.file_name.should == '<eval>'
+      element.function_name.should be nil
+      element.line_number.should == 1
+    else
+      fail "expected to rescue"
+    end
+  end
   
 end
