@@ -1,3 +1,12 @@
+=== 1.73.4 2012-05-21
+
+* allow rhino.jar path overrides with Rhino::JAR_PATH
+* 'correct' JSError#inspect - show thrown value
+* fix JSError#javascript_backtrace to be an array and add it on top of the 
+  (ruby) backtrace
+* make sure JSError#cause always points to native rhino cause (#19)
+* avoid using instance variables with 'native' JS::Context (JRuby 1.7 warnings)
+
 === 1.73.3 2012-04-23
 RedJS 0.4 compatible
 
