@@ -104,5 +104,16 @@ describe Rhino::JSError do
       fail "expected to rescue"
     end
   end
+
+  it "inspect shows the javascript value" do
+    begin
+      Rhino::Context.eval "throw '42'"
+    rescue => e
+      e.inspect.should == '#<Rhino::JSError: 42>'
+      e.to_s.should == '42'
+    else
+      fail "expected to rescue"
+    end
+  end
   
 end

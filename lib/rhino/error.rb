@@ -8,6 +8,10 @@ module Rhino
       super(message)
     end
     
+    def inspect
+      "#<#{self.class.name}: #{message}>"
+    end
+    
     # most likely a Rhino::JS::JavaScriptException
     def cause
       return @cause if defined?(@cause)
