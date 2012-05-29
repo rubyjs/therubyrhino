@@ -159,6 +159,8 @@ class Java::OrgMozillaJavascript::BaseFunction
     # TODO can't pass Undefined.instance as this - it's not a Scriptable !?
     this = Rhino::JS::ScriptRuntime.getGlobal(context)
     __call__(context, scope, this, Rhino.args_to_javascript(args, scope))
+  rescue Rhino::JS::JavaScriptException => e
+    raise Rhino::JSError.new(e)
   ensure
     Rhino::JS::Context.exit
   end
@@ -176,6 +178,8 @@ class Java::OrgMozillaJavascript::BaseFunction
   def new(*args)
     context = Rhino::JS::Context.enter; scope = current_scope(context)
     construct(context, scope, Rhino.args_to_javascript(args, scope))
+  rescue Rhino::JS::JavaScriptException => e
+    raise Rhino::JSError.new(e)
   ensure
     Rhino::JS::Context.exit
   end
