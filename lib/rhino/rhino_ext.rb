@@ -85,6 +85,13 @@ class Java::OrgMozillaJavascript::ScriptableObject
     to_h.to_json(*args)
   end
   
+  # make sure inspect prints the same as to_s (on --1.8)
+  # otherwise JRuby might play it a little smart e.g. :
+  # "#<#<Class:0xd790a8>:0x557c15>" instead of "Error: bar"
+  def inspect
+    toString
+  end
+  
   # Delegate methods to JS object if possible when called from Ruby.
   def method_missing(name, *args)
     name_str = name.to_s
