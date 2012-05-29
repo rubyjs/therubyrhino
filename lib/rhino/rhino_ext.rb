@@ -205,7 +205,7 @@ class Java::OrgMozillaJavascript::ScriptStackElement
   def to_s
     str = "at #{fileName}"
     str << ':' << lineNumber.to_s if lineNumber > -1
-    str << " (#{funcionName})" if functionName
+    str << " (#{functionName})" if functionName
     str
   end
   

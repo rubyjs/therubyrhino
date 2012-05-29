@@ -93,6 +93,18 @@ describe Rhino::JSError do
     end
   end
 
+  it "contains function name in javascript backtrace" do
+    begin
+      Rhino::Context.eval "function fortyTwo() { throw 42 }\n fortyTwo()"
+    rescue => e
+      e.javascript_backtrace.size.should == 2
+      e.javascript_backtrace[0].should == "at <eval>:1 (fortyTwo)"
+      e.javascript_backtrace[1].should == "at <eval>:2"
+    else
+      fail "expected to rescue"
+    end
+  end
+  
   it "backtrace starts with the javascript part" do
     begin
       Rhino::Context.eval "throw 42"
