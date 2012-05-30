@@ -200,6 +200,8 @@ class Java::OrgMozillaJavascript::BaseFunction
     context = Rhino::JS::Context.enter; scope = current_scope(context)
     args = Rhino.args_to_javascript(args, scope)
     __call__(context, scope, Rhino.to_javascript(this), args)
+  rescue Rhino::JS::JavaScriptException => e
+    raise Rhino::JSError.new(e)
   ensure
     Rhino::JS::Context.exit
   end

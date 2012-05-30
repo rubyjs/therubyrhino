@@ -127,5 +127,18 @@ describe Rhino::JSError do
       fail "expected to rescue"
     end
   end
+
+  it "raises correct error from function#apply" do
+    begin
+      context = Rhino::Context.new
+      context.eval "function foo() { throw 'bar' }"
+      context['foo'].apply(nil)
+    rescue => e
+      e.should be_a Rhino::JSError
+      e.value.should == 'bar'
+    else
+      fail "expected to rescue"
+    end
+  end
   
 end
