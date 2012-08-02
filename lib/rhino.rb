@@ -16,6 +16,23 @@ module Rhino
     end
   end
   
+  @@implementation_version = nil
+  # Helper to resolve what version of Rhino's .jar we're really using.
+  def self.implementation_version
+    @@implementation_version ||= begin
+      urls = JS::Kit.java_class.to_java.getClassLoader.
+        getResources('META-INF/MANIFEST.MF').to_a
+      rhino_jar_urls = urls.select { |url| url.toString.index(JAR_PATH) }
+      if rhino_jar_urls.empty?
+        raise "could not find #{JAR_PATH} manifest among: #{urls.map(&:toString).join(', ')}"
+      elsif rhino_jar_urls.size > 1
+        raise "could not find #{JAR_PATH} manifest among: #{urls.map(&:toString).join(', ')}"
+      end
+      manifest = java.util.jar.Manifest.new rhino_jar_urls.first.openStream
+      manifest.getMainAttributes.getValue 'Implementation-Version'
+    end
+  end
+  
 end
 
 require 'rhino/version'
