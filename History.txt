@@ -1,3 +1,8 @@
+=== jar-1.7.3 2012-08-02
+
+* therubyrhino_jar gem packaged with Mozilla Rhino 1.7R3
+
+
 === 1.73.5 2012-07-25
 
 * #to_s functionName typo fix for org.mozilla.javascript.ScriptStackElement

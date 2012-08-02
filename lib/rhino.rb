@@ -2,17 +2,18 @@ require 'java'
 
 module Rhino
   
-  require defined?(Rhino::JAR_PATH) ? JAR_PATH : 'rhino/rhino-1.7R3.jar'
+   # allow for rhino.jar overrides for "experimental" jrubyists 
+   # fallback to rhino/jar_path provided therubyrhino_jar gem :
+  require 'rhino/jar_path' unless defined?(Rhino::JAR_PATH)
+  load Rhino::JAR_PATH
   
   # This module contains all the native Rhino objects implemented in Java
   # e.g. Rhino::JS::NativeObject # => org.mozilla.javascript.NativeObject
   module JS
     include_package "org.mozilla.javascript"
-    
     module Regexp
       include_package "org.mozilla.javascript.regexp"
     end
-    
   end
   
 end
