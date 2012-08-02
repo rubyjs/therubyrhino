@@ -3,12 +3,12 @@
 
 Gem::Specification.new do |s|
   s.name = %q{therubyrhino_jar}
-  s.version = '1.7.3'
+  s.version = '1.7.4'
   s.authors = ["Charles Lowell", "Karol Bucek"]
   s.email = ['cowboyd@thefrontside.net', 'self@kares.org']
   
   s.summary     = "Rhino's jars packed for therubyrhino"
-  s.description = %q{Rhino's js.jar packaged as a JRuby gem.}
+  s.description = %q{Rhino's js.jar classes packaged as a JRuby gem.}
   
   s.homepage = %q{http://github.com/cowboyd/therubyrhino}
   s.rubyforge_project = %q{therubyrhino}

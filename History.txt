@@ -1,3 +1,8 @@
+=== jar-1.7.4 2012-08-02
+
+* updated to new Mozilla Rhino 1.7R4 release, notes:
+  https://developer.mozilla.org/en/New_in_Rhino_1.7R4
+
 === 2.0.0 2012-08-02
 This release is functionally the same as therubyrhino-1.73.5 as long 
 as the therubyrhino_jar-1.7.3 gem dependency is used along with it.
