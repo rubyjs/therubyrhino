@@ -12,7 +12,14 @@ module Rhino
       "#<#{self.class.name}: #{message}>"
     end
     
-    # most likely a Rhino::JS::JavaScriptException
+    # Returns the error message, in case of a native JavaScript value, will
+    # return that value converted to a String.
+    def message
+      super.to_s # since 1.9.x message is expected to allways be a string
+    end
+    
+    # Returns the (nested) cause of this error if any, most likely a 
+    # #Rhino::JS::JavaScriptException instance.
     def cause
       return @cause if defined?(@cause)
       @cause = begin
@@ -24,6 +31,7 @@ module Rhino
       end
     end
 
+    # Return the thown (native) JavaScript value.
     def value
       return @value if defined?(@value)
       if cause.respond_to?(:value) # e.g. JavaScriptException.getValue
@@ -35,6 +43,7 @@ module Rhino
       end
     end
     
+    # Attempts to unwrap the (native) JavaScript/Java exception.
     def unwrap
       return @unwrap if defined?(@unwrap)
       cause = self.cause
@@ -50,6 +59,7 @@ module Rhino
       end
     end
     
+    # The backtrace is constructed using #javascript_backtrace + the Ruby part.
     def backtrace
       if js_backtrace = javascript_backtrace
         js_backtrace.push(*super)
@@ -58,6 +68,7 @@ module Rhino
       end
     end
     
+    # Returns the JavaScript back-trace part for this error (the script stack).
     def javascript_backtrace(keep_elements = false)
       if cause.is_a?(JS::RhinoException)
         cause.getScriptStack.map do |element| # ScriptStackElement[]

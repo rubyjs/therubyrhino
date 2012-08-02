@@ -42,7 +42,7 @@ describe Rhino::JSError do
       e.should be_a(Rhino::JSError)
       e.value.should be_a(Rhino::JS::NativeObject)
       e.value['foo'].should == 'bar'
-      e.value.should == e.message
+      e.message.should == e.value.to_s
     else
       fail "expected to rescue"
     end
@@ -54,7 +54,7 @@ describe Rhino::JSError do
     rescue => e
       e.should be_a(Rhino::JSError)
       e.value.should == 'mehehehe'
-      e.value.should == e.message
+      e.message.should == e.value.to_s
     else
       fail "expected to rescue"
     end
