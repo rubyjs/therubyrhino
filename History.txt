@@ -1,3 +1,10 @@
+=== 2.0.0 2012-08-02
+This release is functionally the same as therubyrhino-1.73.5 as long 
+as the therubyrhino_jar-1.7.3 gem dependency is used along with it.
+
+* new versioning scheme - old scheme used for the jar gem
+* moved out the rhino.jar into a separate therubyrhino_jar gem
+
 === jar-1.7.3 2012-08-02
 
 * therubyrhino_jar gem packaged with Mozilla Rhino 1.7R3

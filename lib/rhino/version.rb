@@ -1,3 +1,3 @@
 module Rhino
-  VERSION = "1.73.5"
+  VERSION = "2.0.0"
 end
