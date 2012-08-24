@@ -128,6 +128,28 @@ describe Rhino::JSError do
     end
   end
 
+  it "wrapps false value correctly" do
+    begin
+      Rhino::Context.eval "throw false"
+    rescue => e
+      e.inspect.should == '#<Rhino::JSError: false>'
+      e.value.should be false
+    else
+      fail "expected to rescue"
+    end
+  end
+
+  it "wrapps null value correctly" do
+    begin
+      Rhino::Context.eval "throw null"
+    rescue => e
+      e.inspect.should == '#<Rhino::JSError: null>'
+      e.value.should be nil
+    else
+      fail "expected to rescue"
+    end
+  end
+  
   it "raises correct error from function#apply" do
     begin
       context = Rhino::Context.new
@@ -139,6 +161,33 @@ describe Rhino::JSError do
     else
       fail "expected to rescue"
     end
+  end
+
+  it "prints info about nested (ruby) error" do
+    context = Rhino::Context.new
+    klass = Class.new do
+      def hello(arg = 42) 
+        raise RuntimeError, 'hello' if arg != 42
+      end
+    end
+    context[:Hello] = klass.new
+    hi = context.eval "( function hi(arg) { Hello.hello(arg); } )"
+    begin
+      hi.call(24)
+    rescue => e
+      e.should be_a Rhino::JSError
+      e.value.should_not be nil
+      e.value.should be_a Rhino::Ruby::Object
+      e.value(true).should be_a RuntimeError # unwraps ruby object
+      # prints the original message (beyond [ruby RuntimeError]) :
+      e.message.should == "RuntimeError: hello"
+    else
+      fail "expected to rescue"
+    end
+    # V8::JSError: hello
+    #   from (irb):4:in `hello'
+    #   from at hi (<eval>:1:28)
+    #   from (irb):9
   end
   
 end

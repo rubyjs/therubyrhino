@@ -4,8 +4,11 @@ module Rhino
     
     def initialize(native)
       @native = native # NativeException wrapping a Java Throwable
-      message = value ? value : ( cause ? cause.details : @native )
-      super(message)
+      if ( value = self.value(true) ) != nil
+        super value.is_a?(Exception) ? "#{value.class.name}: #{value.message}" : value
+      else
+        super cause ? cause.details : @native
+      end
     end
     
     def inspect
@@ -22,24 +25,10 @@ module Rhino
     # #Rhino::JS::JavaScriptException instance.
     def cause
       return @cause if defined?(@cause)
-      @cause = begin
-        if @native.respond_to?(:cause) && @native.cause
-          @native.cause
-        else
-          @native.is_a?(JS::RhinoException) ? @native : nil
-        end
-      end
-    end
-
-    # Return the thown (native) JavaScript value.
-    def value
-      return @value if defined?(@value)
-      if cause.respond_to?(:value) # e.g. JavaScriptException.getValue
-        @value = cause.value
-      elsif ( unwrap = self.unwrap ) && unwrap.respond_to?(:value)
-        @value = unwrap.value
+      if @native.respond_to?(:cause)
+        @native.cause
       else
-        @value = nil
+        @native.is_a?(JS::RhinoException) ? @native : nil
       end
     end
     
@@ -57,6 +46,14 @@ module Rhino
       else
         @unwrap = nil
       end
+    end
+    
+    # Return the thown (native) JavaScript value.
+    def value(unwrap = false)
+      return @value if defined?(@value) && ! unwrap
+      @value = get_value unless defined?(@value)
+      return @value.unwrap if unwrap && @value.respond_to?(:unwrap)
+      @value
     end
     
     # The backtrace is constructed using #javascript_backtrace + the Ruby part.
@@ -80,6 +77,18 @@ module Rhino
     end
     
     Rhino::JS::RhinoException.useMozillaStackStyle(false)
+    
+    private
+    
+    def get_value
+      if ( cause = self.cause ) && cause.respond_to?(:value)
+        cause.value  # e.g. JavaScriptException.getValue
+      elsif ( unwrap = self.unwrap ) && unwrap.respond_to?(:value)
+        unwrap.value
+      else
+        nil
+      end
+    end
     
   end
   
