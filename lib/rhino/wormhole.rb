@@ -1,13 +1,15 @@
 
 module Rhino
   module To
-
+    
     def to_ruby(object)
       case object
       when JS::Scriptable::NOT_FOUND, JS::Undefined then nil
       when JS::Wrapper           then object.unwrap
       when JS::NativeArray       then array_to_ruby(object)
       when JS::NativeDate        then Time.at(object.getJSTimeValue / 1000)
+      # Rhino 1.7R4 added ConsString for optimized String + operations :
+      when Java::JavaLang::CharSequence then object.toString
       else object
       end
     end

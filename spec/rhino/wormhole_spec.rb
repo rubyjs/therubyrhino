@@ -5,52 +5,48 @@ describe Rhino::To do
   describe "ruby translation" do
     
     it "converts javascript NOT_FOUND to ruby nil" do
-      Rhino.to_ruby(Rhino::JS::Scriptable::NOT_FOUND).should be_nil
+      Rhino.to_ruby(Rhino::JS::Scriptable::NOT_FOUND).should be nil
     end
   
     it "converts javascript undefined into nil" do
-      Rhino.to_ruby(Rhino::JS::Undefined.instance).should be_nil
+      Rhino.to_ruby(Rhino::JS::Undefined.instance).should be nil
     end
     
     it "does return javascript object" do
       Rhino::JS::NativeObject.new.tap do |js_obj|
-        Rhino.to_ruby(js_obj).tap do |rb_obj|
-          rb_obj.should be(js_obj)
-        end
+        Rhino.to_ruby(js_obj).should be(js_obj)
       end
     end
     
     it "wraps native javascript arrays into a ruby NativeArray wrapper" do
-      Rhino::JS::NativeArray.new([1,2,4].to_java).tap do |js_array|
-        Rhino.to_ruby(js_array).should == [1,2,4]
-      end
+      js_array = Rhino::JS::NativeArray.new([1,2,4].to_java)
+      Rhino.to_ruby(js_array).should == [1,2,4]
     end
     
-    it "does return javascript function" do
-      
+    it "returns a javascript function" do
       klass = Class.new(Rhino::JS::BaseFunction)
-      
-      klass.new.tap do |js_fn|
-        Rhino.to_ruby(js_fn).tap do |rb_fn|
-          rb_fn.should be(js_fn)
-        end
-      end
-      
+      function = klass.new
+      Rhino.to_ruby(function).should be(function)
     end
     
     it "leaves native ruby objects alone" do
-      Object.new.tap do |o|
-        Rhino.to_ruby(o).should be(o)
-      end
+      obj = Object.new
+      Rhino.to_ruby(obj).should be(obj)
     end
     
     it "it unwraps wrapped java objects" do
       Rhino::Context.open do |cx|
         scope = cx.scope
         j_str = java.lang.String.new("Hello World")
-        Rhino::JS::NativeJavaObject.new(scope, j_str, j_str.getClass()).tap do |o|
-          Rhino.to_ruby(o).should == "Hello World"
-        end
+        native_obj = Rhino::JS::NativeJavaObject.new(scope, j_str, j_str.getClass())
+        Rhino.to_ruby(native_obj).should == "Hello World"
+      end
+    end
+    
+    if (Java::JavaClass.for_name('org.mozilla.javascript.ConsString') rescue nil)
+      it "converts a cons string" do
+        cons_string = org.mozilla.javascript.ConsString.new('1', '2')
+        Rhino.to_ruby(cons_string).should == '12'
       end
     end
     

@@ -4,7 +4,7 @@ require 'rhino'
 require 'pathname'
 require 'stringio'
 
-puts "running with: #{Rhino::VERSION} using jar: #{Rhino::JAR_PATH}"
+puts "Rhino #{Rhino::VERSION} (#{Rhino::JAR_PATH})"
 
 describe 'integration' do
   
@@ -26,9 +26,8 @@ describe 'integration' do
 
   it "require index/loop" do # CommonJS
     environment = new_environment(:console => Console)
-    exports = environment.require 'index'
-    exports.context['Loop'].should_not be nil
-    exports.context['Loop'].to_s.should == 'Loop'
+    environment.require 'index'
+    environment.context['Loop'].should_not be nil
   end
   
   private
