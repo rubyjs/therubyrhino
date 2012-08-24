@@ -1,3 +1,9 @@
+=== 2.0.1 2012-08-24
+
+* JSError improvement to preserve nested Ruby error message
+* jar-1.7.4 regression fix e.g when loading less (#25)
+* error.message should be a String value (1.9.3 compat)
+
 === jar-1.7.4 2012-08-02
 
 * updated to new Mozilla Rhino 1.7R4 release, notes:

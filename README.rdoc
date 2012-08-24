@@ -184,11 +184,11 @@ Rhino is licensed under the MPL 1.1/GPL 2.0 license.
 
 == REQUIREMENTS:
 
-* JRuby >= 1.5.6
+* JRuby >= 1.6
 
 == INSTALL:
 
-* jgem install therubyrhino
+* jruby -S gem install therubyrhino
 
 == LICENSE:
 
