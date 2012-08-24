@@ -14,5 +14,5 @@ group :test do
   else
     gem 'therubyrhino_jar', :path => '.'
   end
-  gem 'less', '>= 2.2.1'
+  gem 'less', '>= 2.2.1', :require => nil
 end

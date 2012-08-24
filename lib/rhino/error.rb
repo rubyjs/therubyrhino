@@ -25,7 +25,7 @@ module Rhino
     # #Rhino::JS::JavaScriptException instance.
     def cause
       return @cause if defined?(@cause)
-      if @native.respond_to?(:cause)
+      if @native.respond_to?(:cause) && @native.cause
         @native.cause
       else
         @native.is_a?(JS::RhinoException) ? @native : nil
