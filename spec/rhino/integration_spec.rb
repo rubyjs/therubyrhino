@@ -4,14 +4,16 @@ require 'rhino'
 require 'pathname'
 require 'stringio'
 
+puts "running with: #{Rhino::VERSION} using jar: #{Rhino::JAR_PATH}"
+
 describe 'integration' do
   
-  it "requires (CommonJS)" do
-    context = Rhino::Context.new
-    #context.optimization_level = -1
-    context['console'] = Console
-    path = Pathname(__FILE__).dirname.join('integration')
-    environment = Env.new(context, :path => path.to_s)
+  it "loads LESS" do
+    require 'less'
+  end
+  
+  it "require foo" do # CommonJS
+    environment = new_environment(:console => Console)
     environment.native 'util', Util.new(out = StringIO.new)
     exports = environment.require 'foo'
     out.string.should == "Hello Bar!\n"
@@ -21,9 +23,28 @@ describe 'integration' do
     exports.foo['Bar'].should respond_to(:'[]')
     exports.foo['Bar'][:puts].should be_a Rhino::JS::Function
   end
+
+  it "require index/loop" do # CommonJS
+    environment = new_environment(:console => Console)
+    exports = environment.require 'index'
+    exports.context['Loop'].should_not be nil
+    exports.context['Loop'].to_s.should == 'Loop'
+  end
+  
+  private
+  
+  def new_environment(globals = {})
+    context = Rhino::Context.new
+    #context.optimization_level = -1
+    globals.each { |key, obj| context[key] = obj }
+    path = Pathname(__FILE__).dirname.join('integration')
+    Env.new(context, :path => path.to_s)
+  end
   
   class Env # a CommonJS like environment (inspired by commonjs.rb)
   
+    attr_reader :context, :modules
+    
     def initialize(context, options = {})
       @context = context
       @paths = [ options[:path] ].flatten.map { |path| Pathname(path) }
@@ -31,22 +52,22 @@ describe 'integration' do
     end
     
     def require(module_id)
-      unless mod = @modules[module_id]
+      unless mod = modules[module_id]
         filepath = find(module_id) or fail LoadError, "no such module '#{module_id}'"
         js = "( function(module, require, exports) {\n#{File.read(filepath)}\n} )"
-        load = @context.eval(js, filepath.expand_path.to_s)
-        @modules[module_id] = mod = Module.new(module_id, self)
+        load = context.eval(js, filepath.expand_path.to_s)
+        modules[module_id] = mod = Module.new(module_id, self)
         load.call(mod, mod.require_function, mod.exports)
       end
       return mod.exports
     end
     
     def native(module_id, impl)
-      @modules[module_id] = Module::Native.new(impl)
+      modules[module_id] = Module::Native.new(impl)
     end
     
     def new_object
-      @context['Object'].new
+      context['Object'].new
     end
 
     private
@@ -59,11 +80,10 @@ describe 'integration' do
     
     class Module
 
-      attr_reader :exports
+      attr_reader :id, :exports
 
       def initialize(id, env)
-        @id = id
-        @env = env
+        @id, @env = id, env
         @exports = env.new_object
         @segments = id.split('/')
       end
