@@ -176,6 +176,19 @@ methods "defined in their classes" are exposed by default e.g.
     cxt.eval("b.a()") # => 'TypeError: undefined property 'a' is not a function'
   end
   
+==== Using a custom Rhino version
+
+Officially supported versions of Rhino's _js.jar_ are packaged separately as 
+*therubyrhino_jar* gem. Make sure you're using the latest gem version if you 
+feel like missing something available with Rhino. For experimenters the jar can
+be overriden by defining a +Rhino::JAR_PATH+ before +require 'rhino'+ e.g. :
+
+  module Rhino
+    JAR_PATH = File.expand_path('lib/rhino/build/rhino1_7R5pre/js.jar')
+  end
+  # ...
+  require 'rhino'
+
 == Rhino
 
 Rhino is currently maintained at https://github.com/mozilla/rhino
