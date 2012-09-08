@@ -172,13 +172,23 @@ describe Rhino::Ruby::Function do
   end
   
   it_should_behave_like Rhino::Ruby::Scriptable
-
-  it "is callable as a function" do
-    rb_function = Rhino::Ruby::Function.wrap method = 'foo'.method(:to_s)
-    context = nil; scope = nil; this = nil; args = nil
-    rb_function.call(context, scope, this, args).should == 'foo'
+  
+  it "is (JavaScript) callable as a function" do
+    rb_function = Rhino::Ruby::Function.wrap 'foo'.method(:upcase)
+    this = nil; args = nil
+    rb_function.call(context, scope, this, args).should == 'FOO'
   end
 
+  it 'is Ruby callable' do
+    rb_function = Rhino::Ruby::Function.wrap 'foo'.method(:upcase)
+    rb_function.call.should == 'FOO'
+  end
+
+  it 'is Ruby callable passing arguments' do
+    rb_function = Rhino::Ruby::Function.wrap 'foo'.method(:scan)
+    rb_function.call('o').should == ['o', 'o']
+  end
+  
   it "args get converted before delegating a ruby function call" do
     klass = Class.new(Object) do
       def foo(array)
@@ -186,7 +196,7 @@ describe Rhino::Ruby::Function do
       end
     end
     rb_function = Rhino::Ruby::Function.wrap method = klass.new.method(:foo)
-    context = nil; scope = nil; this = nil
+    this = nil
     args = [ '1'.to_java, java.lang.String.new('2') ].to_java
     args = [ Rhino::JS::NativeArray.new(args) ].to_java
     rb_function.call(context, scope, this, args).should be(true)
@@ -199,7 +209,7 @@ describe Rhino::Ruby::Function do
       end
     end
     rb_function = Rhino::Ruby::Function.wrap method = klass.new.method(:foo)
-    context = nil; scope = nil; this = nil; args = [].to_java
+    this = nil; args = [].to_java
     rb_function.call(context, scope, this, args).should be_a(Rhino::JS::NativeArray)
   end
 
@@ -209,8 +219,8 @@ describe Rhino::Ruby::Function do
         a1
       end
     end
-    rb_function = Rhino::Ruby::Function.wrap method = klass.new.method(:foo)
-    context = nil; scope = nil; this = nil
+    rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
+    this = nil
     
     args = [ 1.to_java, 2.to_java, 3.to_java ].to_java; js_return = nil
     lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
@@ -224,7 +234,7 @@ describe Rhino::Ruby::Function do
       end
     end
     rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
-    context = nil; scope = nil; this = nil
+    this = nil
     
     args = [ 1.to_java ].to_java; js_return = nil
     lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
@@ -242,7 +252,7 @@ describe Rhino::Ruby::Function do
       end
     end
     rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
-    context = nil; scope = nil; this = nil
+    this = nil
 
     args = [ ].to_java; js_return = nil
     lambda { js_return = rb_function.call(context, scope, this, args) }.should_not raise_error
@@ -292,22 +302,11 @@ describe Rhino::Ruby::Function do
   
   describe 'with scope' do
     
-    before do
-      factory = Rhino::JS::ContextFactory.new
-      context = nil
-      factory.call do |ctx|
-        context = ctx
-        @scope = context.initStandardObjects(nil, false)
-      end
-      factory.enterContext(context)
-    end
-
-    after do
-      Rhino::JS::Context.exit
-    end
+    before { context_factory.enterContext(context) }
+    after { Rhino::JS::Context.exit }
     
     it "sets up correct prototype" do
-      rb_function = Rhino::Ruby::Function.wrap 'foo'.method(:concat), @scope
+      rb_function = Rhino::Ruby::Function.wrap 'foo'.method(:concat), scope
       rb_function.getPrototype.should_not be(nil)
       rb_function.getPrototype.should be_a(Rhino::JS::Function)
     end
@@ -338,7 +337,7 @@ describe Rhino::Ruby::Constructor do
   
   it "is callable as a function" do
     rb_new = Rhino::Ruby::Constructor.wrap Foo
-    context = nil; scope = nil; this = nil; args = nil
+    this = nil; args = nil
     rb_new.call(context, scope, this, args).should be_a(Rhino::Ruby::Object)
     rb_new.call(context, scope, this, args).unwrap.should be_a(Foo)
   end
@@ -398,7 +397,7 @@ describe Rhino::Ruby::Exception do
       end
     end
     rb_function = Rhino::Ruby::Function.wrap klass.new.method(:foo)
-    context = nil; scope = nil; this = nil; args = [ 42.to_java ].to_java
+    this = nil; args = [ 42.to_java ].to_java
     begin
       rb_function.call(context, scope, this, args)
     rescue java.lang.Exception => e

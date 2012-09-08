@@ -168,12 +168,12 @@ describe Rhino::To do
     it "converts procs and methods into native functions" do
       Rhino.to_javascript(lambda {|lhs,rhs| lhs * rhs}).tap do |f|
         f.should be_kind_of(Rhino::JS::Function)
-        f.call(nil, nil, nil, [7, 6].to_java).should be(42)
+        f.call(context, scope, nil, [7, 6].to_java).should be(42)
       end
       
       Rhino.to_javascript("foo,bar,baz".method(:split)).tap do |f|
         f.should be_kind_of(Rhino::JS::Function)
-        Rhino.to_ruby(f.call(nil, nil, nil, [','].to_java)).should == ['foo', 'bar', 'baz']
+        Rhino.to_ruby(f.call(context, scope, nil, [','].to_java)).should == ['foo', 'bar', 'baz']
       end
     end
 

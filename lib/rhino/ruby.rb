@@ -176,7 +176,11 @@ module Rhino
 
       # override Object BaseFunction#call(Context context, Scriptable scope, 
       #                                   Scriptable thisObj, Object[] args)
-      def call(context, scope, this, args)
+      def call(*args)
+        unless args.first.is_a?(JS::Context)
+          return super # assume a Ruby #call
+        end
+        _, scope, this, args = *args # Java Function#call dispatch
         args = args.to_a # java.lang.Object[] -> Array
         # JS function style :
         if ( arity = @callable.arity ) != -1 # (a1, *a).arity == -2
