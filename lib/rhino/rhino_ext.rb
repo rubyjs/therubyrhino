@@ -165,7 +165,8 @@ class Java::OrgMozillaJavascript::BaseFunction
     # calling as a (var) stored function - no this === undefined "use strict"
     # TODO can't pass Undefined.instance as this - it's not a Scriptable !?
     this = Rhino::JS::ScriptRuntime.getGlobal(context)
-    __call__(context, scope, this, Rhino.args_to_javascript(args, scope))
+    js_args = Rhino.args_to_javascript(args, scope)
+    Rhino.to_ruby __call__(context, scope, this, js_args)
   rescue Rhino::JS::JavaScriptException => e
     raise Rhino::JSError.new(e)
   ensure

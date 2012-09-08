@@ -158,9 +158,21 @@ describe "NativeFunction" do
   
   it_should_behave_like 'ScriptableObject'
   
-  it 'is callable' do
+  it 'is (Ruby) callable' do
     # NOTE: no implicit or bound this thus this === global
     @object.call.should == '[object global]'
+  end
+
+  it 'is (Ruby) callable passing arguments' do
+    js = "( function foo(arg) { return 'foo' + arg; } )"
+    foo = @context.evaluateString(@scope, js, '<eval>', 0, nil)
+    foo.call(42).should == 'foo42'
+  end
+
+  it 'is (Ruby) callable converting result' do
+    js = "( function foo(arg) { return [ 1, 2, arg ]; } )"
+    foo = @context.evaluateString(@scope, js, '<eval>', 0, nil)
+    foo.call('x').should == [ 1, 2, 'x' ]
   end
   
   it 'might be bind and called' do
