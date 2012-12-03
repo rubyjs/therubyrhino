@@ -154,4 +154,16 @@ describe Rhino::Context do
     end
   end
 
+  it "allows to set (default) language version" do
+    context = Rhino::Context.new :javascript_version => '1.6'
+    context.javascript_version.should == 1.6
+    begin
+      Rhino::Context.default_javascript_version = '1.5'
+      context = Rhino::Context.new
+      context.javascript_version.should == 1.5
+    ensure
+      Rhino::Context.default_javascript_version = nil
+    end
+  end
+
 end

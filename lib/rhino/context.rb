@@ -67,6 +67,15 @@ module Rhino
       @@default_optimization_level = level
     end
 
+    @@default_javascript_version = java.lang.System.getProperty('rhino.js.version')
+    def self.default_javascript_version
+      @@default_javascript_version
+    end
+    
+    def self.default_javascript_version=(version)
+      @@default_javascript_version = version
+    end
+
     attr_reader :scope
     
     # Create a new javascript environment for executing javascript and ruby code.
@@ -93,6 +102,9 @@ module Rhino
       end
       if optimization_level = options[:optimization_level] || self.class.default_optimization_level
         self.optimization_level = optimization_level
+      end
+      if javascript_version = options[:javascript_version] || self.class.default_javascript_version
+        self.javascript_version = javascript_version
       end
       yield(self) if block_given?
     end
@@ -203,16 +215,17 @@ module Rhino
 
     # Get the JS interpreter version. 
     # Returns a number e.g. 1.7, nil if unknown and 0 for default.
-    def version
+    def javascript_version
       case const_value = @native.getLanguageVersion
         when -1 then nil # VERSION_UNKNOWN
         when  0 then 0 # VERSION_DEFAULT
         else const_value / 100.0 # VERSION_1_1 (1.1 = 110 / 100)
       end
     end
+    alias :version :javascript_version
     
     # Sets interpreter mode a.k.a. JS language version e.g. 1.7 (if supported).
-    def version=(version)
+    def javascript_version=(version)
       const = version.to_s.gsub('.', '_').upcase
       const = "VERSION_#{const}" if const[0, 7] != 'VERSION'
       if JS::Context.constants.find { |c| c.to_s == const }
@@ -224,6 +237,7 @@ module Rhino
         nil
       end
     end
+    alias :version= :javascript_version= 
     
     # Enter this context for operations. 
     # Some methods such as eval() will fail unless this context is open !
