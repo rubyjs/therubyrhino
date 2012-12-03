@@ -4,8 +4,8 @@ module Rhino
   
    # allow for rhino.jar overrides for "experimental" jrubyists 
    # fallback to rhino/jar_path provided therubyrhino_jar gem :
-  require 'rhino/jar_path' unless defined?(Rhino::JAR_PATH)
-  load Rhino::JAR_PATH
+  require 'rhino/jar_path' unless const_defined?(:JAR_PATH)
+  load JAR_PATH
   
   # This module contains all the native Rhino objects implemented in Java
   # e.g. Rhino::JS::NativeObject # => org.mozilla.javascript.NativeObject

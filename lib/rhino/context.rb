@@ -58,6 +58,15 @@ module Rhino
       @@default_factory = factory
     end
     
+    @@default_optimization_level = java.lang.Integer.getInteger('rhino.opt.level')
+    def self.default_optimization_level
+      @@default_optimization_level
+    end
+    
+    def self.default_optimization_level=(level)
+      @@default_optimization_level = level
+    end
+
     attr_reader :scope
     
     # Create a new javascript environment for executing javascript and ruby code.
@@ -81,6 +90,9 @@ module Rhino
             @global.delete(package)
           end
         end
+      end
+      if optimization_level = options[:optimization_level] || self.class.default_optimization_level
+        self.optimization_level = optimization_level
       end
       yield(self) if block_given?
     end

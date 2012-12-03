@@ -1,9 +1,9 @@
 
 module Rhino
   
-  @@stub_class = Class.new(Object)
+  @@stub_class = Class.new(Object) # :nodoc
   
-  def self.const_missing(name)
+  def self.const_missing(name) # :nodoc
     case name.to_s
     when 'J' then
       warn "[DEPRECATION] `Rhino::J` is deprecated, use `Rhino::JS` instead."
@@ -23,7 +23,7 @@ module Rhino
   
   @@warnings = {}
   
-  def self.warn(msg)
+  def self.warn(msg) # :nodoc
     # only print out deprecation warnings once
     if msg[0, 13] == '[DEPRECATION]'
       return nil if @@warnings[msg]
@@ -32,17 +32,17 @@ module Rhino
     super # Kernel.warn
   end
   
-  module To
+  module To # :nodoc
   
     extend self
 
-    # @deprecated use {#to_ruby} instead
+    # #deprecated use {Rhino#to_ruby} instead
     def self.ruby(object)
       Rhino.warn "[DEPRECATION] `Rhino::To.ruby` is deprecated, use `Rhino.to_ruby` instead."
       to_ruby(object)
     end
 
-    # @deprecated use {#to_javascript} instead
+    # #deprecated use {Rhino#to_javascript} instead
     def self.javascript(object, scope = nil) 
       Rhino.warn "[DEPRECATION] `Rhino::To.javascript` is deprecated, use `Rhino.to_javascript` instead."
       to_javascript(object, scope)

@@ -140,4 +140,18 @@ describe Rhino::Context do
     }.should raise_error(Rhino::RunawayScriptError)
   end
   
+  it "allows to set (default) optimization level" do
+    context = Rhino::Context.new :optimization_level => 2
+    context.eval %Q{ for (var i = 0; i < 42; i++) Number(i).toString(); }
+    context.optimization_level.should == 2
+    begin
+      Rhino::Context.default_optimization_level = 3
+      context = Rhino::Context.new
+      context.eval %Q{ for (var i = 0; i < 42; i++) Number(i).toString(); }
+      context.optimization_level.should == 3
+    ensure
+      Rhino::Context.default_optimization_level = nil
+    end
+  end
+
 end

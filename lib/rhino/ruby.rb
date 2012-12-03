@@ -272,8 +272,8 @@ module Rhino
     
   end
   
-  RubyObject = Ruby::Object
-  RubyFunction = Ruby::Function
-  RubyConstructor = Ruby::Constructor
+  RubyObject = Ruby::Object # :nodoc
+  RubyFunction = Ruby::Function # :nodoc
+  RubyConstructor = Ruby::Constructor # :nodoc
   
 end
