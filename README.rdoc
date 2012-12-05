@@ -189,6 +189,23 @@ be overriden by defining a +Rhino::JAR_PATH+ before +require 'rhino'+ e.g. :
   # ...
   require 'rhino'
 
+==== Context customizations
+
+Just like the JVM packaged Rhino scripting engine, therubyrhino gem supports
+specifying JavaScript context properies (optimization level and language version)
+using system properties e.g. to force interpreted mode :
+
+  jruby -J-Drhino.opt.level=-1 -rtherubyrhino -S ...
+
+You might also set these programatically as a default for all created contexts :
+
+  Rhino::Context.default_optimization_level = 1
+  Rhino::Context.default_javascript_version = 1.6
+
+Or using plain old JAVA_OPTS e.g. when setting JavaScript version :
+
+  -Drhino.js.version=1.7
+
 == Rhino
 
 Rhino is currently maintained at https://github.com/mozilla/rhino
