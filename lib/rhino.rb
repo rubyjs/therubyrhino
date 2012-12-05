@@ -16,7 +16,7 @@ module Rhino
     end
   end
   
-  @@implementation_version = nil
+  @@implementation_version = nil  # :nodoc
   # Helper to resolve what version of Rhino's .jar we're really using.
   def self.implementation_version
     @@implementation_version ||= begin
@@ -33,6 +33,24 @@ module Rhino
     end
   end
   
+  @@silence = java.lang.Boolean.getBoolean('rhino.silence') # :nodoc
+  # Should we be silent - no warnings will be printed.
+  def self.silence?; @@silence; end
+  # Silence ! (... or I kill you)
+  def self.silence!; @@silence = true; end
+
+  @@warnings = {} # :nodoc
+  
+  def self.warn(msg) # :nodoc
+    return if silence?
+    # only print out deprecations once (even when non-silent)
+    if msg[0, 13] == '[DEPRECATION]'
+      return nil if @@warnings[msg]
+      @@warnings[msg] = true
+    end
+    super # Kernel.warn
+  end
+
 end
 
 require 'rhino/version'
