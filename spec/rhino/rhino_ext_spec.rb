@@ -87,14 +87,14 @@ describe "NativeObject (scoped)" do
   
   before do
     factory = Rhino::JS::ContextFactory.new
-    context, scope = nil, nil
+    @context, @scope = nil, nil
     factory.call do |ctx|
-      context = ctx
-      scope = context.initStandardObjects(nil, false)
+      @context = ctx
+      @scope = @context.initStandardObjects(nil, false)
     end
-    factory.enterContext(context)
+    factory.enterContext(@context)
     
-    @object = context.newObject(scope)
+    @object = @context.newObject(@scope)
   end
   
   after do
@@ -104,7 +104,7 @@ describe "NativeObject (scoped)" do
   it_should_behave_like 'ScriptableObject'  
   
   it 'routes rhino methods' do
-    @object.prototype.should == {}
+    @object.prototype.should_not be nil
     @object.getTypeOf.should == 'object'
   end
   
@@ -128,6 +128,35 @@ describe "NativeObject (scoped)" do
     @object.foo.should == 42
   end
   
+  it 'is == to an empty Hash / Map' do
+    ( @object == {} ).should be true
+    ( @object == java.util.HashMap.new ).should be true
+  end
+
+  it 'is === to an empty Hash' do
+    ( @object === {} ).should be true
+  end
+
+  it 'is not eql? to an empty Hash / Map' do
+    ( @object.eql?( {} ) ).should be false
+    ( @object.eql?( java.util.HashMap.new ) ).should be false
+  end
+
+  it 'is eql? to another native object' do
+    object = @context.newObject(scope)
+    ( @object.eql?( object ) ).should be true
+    ( object.eql?( @object ) ).should be true
+    ( @object == object ).should be true
+    ( object === @object ).should be true
+  end
+
+  it 'native objects with same values are equal' do
+    obj1 = @context.evaluateString @scope, "( { ferko: 'suska', answer: 42 } )", '<eval>', 0, nil
+    obj2 = @context.evaluateString @scope, "var obj = {}; obj['answer'] = 42; obj.ferko = 'suska'; obj", '<eval>', 0, nil
+    ( obj1 == obj2 ).should be true
+    ( obj1.eql?( obj2 ) ).should be true
+  end
+
 end
 
 describe "NativeFunction" do
@@ -220,14 +249,14 @@ describe "NativeFunction (constructor)" do
   
   before do
     factory = Rhino::JS::ContextFactory.new
-    context, scope = nil, nil
+    @context, @scope = nil, nil
     factory.call do |ctx|
-      context = ctx
-      scope = context.initStandardObjects(nil, false)
+      @context = ctx
+      @scope = @context.initStandardObjects(nil, false)
     end
-    factory.enterContext(context)
+    factory.enterContext(@context)
     
-    @object = Rhino::JS::ScriptableObject.getProperty(context.newObject(scope), 'constructor')
+    @object = Rhino::JS::ScriptableObject.getProperty(@context.newObject(@scope), 'constructor')
     @object.instance_eval do
       def to_h_properties
         h = {
@@ -260,7 +289,21 @@ describe "NativeFunction (constructor)" do
   it_should_behave_like 'ScriptableObject'
   
   it 'is constructable' do
-    @object.new.should == {}
+    @object.new.should be_a Rhino::JS::NativeObject
   end
   
+  it 'is not equal to an empty Hash' do
+    ( @object == {} ).should be false
+    ( @object === {} ).should be false
+    ( @object.eql?( {} ) ).should be false
+  end
+
+  it 'empty functions are not considered equal' do
+    fn1 = @context.evaluateString @scope, "( function() {} )", '<eval>', 0, nil
+    fn2 = @context.evaluateString @scope, "var f = function() {}", '<eval>', 0, nil
+    ( fn1 == fn2 ).should be false
+    ( fn1 === fn2 ).should be false
+    ( fn1.eql?( fn2 ) ).should be false
+  end
+
 end

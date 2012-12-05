@@ -80,6 +80,14 @@ class Java::OrgMozillaJavascript::ScriptableObject
     hash
   end
 
+  def ==(other)
+    equivalentValues(other) == true # JS ==
+  end
+
+  def eql?(other)
+    self.class == other.class && self.==(other)
+  end
+
   # Convert this javascript object into a json string.
   def to_json(*args)
     to_h.to_json(*args)
@@ -91,7 +99,7 @@ class Java::OrgMozillaJavascript::ScriptableObject
   def inspect
     toString
   end
-  
+
   # Delegate methods to JS object if possible when called from Ruby.
   def method_missing(name, *args)
     name_str = name.to_s
@@ -147,6 +155,22 @@ class Java::OrgMozillaJavascript::NativeObject
     ScriptableObject.putProperty(self, key.to_s, Rhino.to_javascript(value, scope))
   end
   
+  def ==(other)
+    return true if super
+    if other.is_a?(Hash) || other.is_a?(java.util.Map)
+      for key, val in other
+        return false if self[key] != val
+      end
+      return true
+    end
+    false
+  end
+
+  # NOTE: need to re-implement this as JRuby 1.7.1 seems to be not routing to super
+  def eql?(other) # :nodoc
+    self.class == other.class && self.==(other)
+  end
+
 end
 
 # The base class for all JavaScript function objects.
