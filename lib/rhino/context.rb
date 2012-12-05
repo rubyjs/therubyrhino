@@ -245,7 +245,7 @@ module Rhino
       do_open(&block)
     rescue JS::RhinoException => e
       if code_generation_error?(e)
-        warn "[INFO] Rhino byte-code generation failed forcing #{@native} into interpreted mode"
+        Rhino.warn "[INFO] Rhino byte-code generation failed forcing #{@native} into interpreted mode"
         self.optimization_level = -1
         retry
       end
