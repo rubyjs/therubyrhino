@@ -1,8 +1,11 @@
-require 'bundler/setup'
-
 require 'rhino'
 
-require 'mocha'
+begin
+  require 'mocha/api'
+rescue LoadError
+  require 'mocha'
+end
+
 require 'redjs'
 
 module RedJS

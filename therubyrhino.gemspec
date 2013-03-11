@@ -20,8 +20,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency "therubyrhino_jar", '>= 1.7.3'
   
-  s.add_development_dependency "rake"
-  s.add_development_dependency "rspec", "~> 2.10"
-  s.add_development_dependency "mocha"
-  s.add_development_dependency "jruby-openssl"
+  s.add_development_dependency "rspec", "~> 2.13.0"
+  s.add_development_dependency "mocha", "~> 0.13.3"
 end

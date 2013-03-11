@@ -1,4 +1,4 @@
-source :rubygems
+source "https://rubygems.org"
 
 gemspec :name => "therubyrhino"
 
@@ -16,3 +16,6 @@ group :test do
   end
   gem 'less', '>= 2.2.1', :require => nil
 end
+
+gem 'rake', :group => :development
+gem 'jruby-openssl', :group => :development
