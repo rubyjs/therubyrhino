@@ -1,5 +1,5 @@
 module Rhino
-  JAR_PATH = Dir.glob(
-    File.expand_path('../rhino-*.jar', File.dirname(__FILE__))
-  ).first
+  JAR_VERSION = '1.7.4'; version = JAR_VERSION.split('.')
+  jar_file = "rhino-#{version[0]}.#{version[1]}R#{version[2]}.jar"
+  JAR_PATH = File.expand_path("../#{jar_file}", File.dirname(__FILE__))
 end
