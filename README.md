@@ -22,94 +22,94 @@ Embed the Mozilla Rhino JavaScript interpreter into Ruby
 3. Our shark's in the JavaScript!
 
 ```ruby
-  require 'rhino'
+require 'rhino'
 ```
 
 * evaluate some simple JavaScript using `eval_js`:
 ```ruby
-  eval_js "7 * 6" #=> 42
+eval_js "7 * 6" #=> 42
 ```
 
 * that's quick and dirty, but if you want more control over your environment,
   use a `Context`:
 ```ruby
-  Rhino::Context.open do |cxt|
-    cxt['foo'] = "bar"
-    cxt.eval('foo') # => "bar"
-  end
+Rhino::Context.open do |context|
+  context['foo'] = "bar"
+  context.eval('foo') # => "bar"
+end
 ```
 
 * evaluate a Ruby function from JavaScript:
 ```ruby
-  Rhino::Context.open do |context|
-    context["say"] = lambda {|word, times| word * times}
-    context.eval("say("Hello", 3)") #=> HelloHelloHello
-  end
+Rhino::Context.open do |context|
+  context["say"] = lambda {|word, times| word * times}
+  context.eval("say("Hello", 3)") #=> HelloHelloHello
+end
 ```
 
 * embed a Ruby object into your JavaScript environment
 ```ruby
-  class MyMath
-    def plus(lhs, rhs)
-      lhs + rhs
-    end
+class MyMath
+  def plus(a, b)
+    a + b
   end
+end
 
-  Rhino::Context.open do |context|
-    context["math"] = MyMath.new
-    context.eval("math.plus(20, 22)") #=> 42
-  end
+Rhino::Context.open do |context|
+  context["math"] = MyMath.new
+  context.eval("math.plus(20, 22)") #=> 42
+end
 ```
 
 * make a Ruby object *be* your JavaScript environment
 ```ruby
-  math = MyMath.new
-  Rhino::Context.open(:with => math) do |context|
-    context.eval("plus(20, 22)") #=> 42
-  end
+math = MyMath.new
+Rhino::Context.open(:with => math) do |context|
+  context.eval("plus(20, 22)") #=> 42
+end
 
-  # or the equivalent
+# or the equivalent
 
-  math.eval_js("plus(20, 22)")
+math.eval_js("plus(20, 22)")
 ```
 
-* configure your embedding setup
+### Context Configuration
 
-  * make your standard objects (Object, String, etc...) immutable:
+* make your standard objects (Object, String, etc...) immutable:
 ```ruby
-  Rhino::Context.open(:sealed => true) do |context|
-    context.eval("Object.prototype.toString = function() {}") # this is an error!
-  end
+Rhino::Context.open(:sealed => true) do |context|
+  context.eval("Object.prototype.toString = function() {}") # this is an error!
+end
 ```
 
-  * turn on Java integration from JavaScript (probably a bad idea):
+* turn on Java integration from JavaScript (probably a bad idea):
 ```ruby
-  Rhino::Context.open(:java => true) do |context|
-    context.eval("java.lang.System.exit()") # it's dangerous!
-  end
+Rhino::Context.open(:java => true) do |context|
+  context.eval("java.lang.System.exit()") # it's dangerous!
+end
 ```
 
-  * limit the number of instructions that can be executed to prevent rogue code:
+* limit the number of instructions that can be executed to prevent rogue code:
 ```ruby
-  Rhino::Context.open(:restrictable => true) do |context|
-    context.instruction_limit = 100000
-    context.eval("while (true);") # => Rhino::RunawayScriptError
-  end
+Rhino::Context.open(:restrictable => true) do |context|
+  context.instruction_limit = 100000
+  context.eval("while (true);") # => Rhino::RunawayScriptError
+end
 ```
 
-  * limit the time a script executes (rogue scripts):
+* limit the time a script executes (rogue scripts):
 ```ruby
-  Rhino::Context.open(:restrictable => true, :java => true) do |context|
-    context.timeout_limit = 1.5 # seconds
-    context.eval %Q{
-        for (var i = 0; i < 100; i++) {
-            java.lang.Thread.sleep(100);
-        }
-    } # => Rhino::ScriptTimeoutError
-  end
+Rhino::Context.open(:restrictable => true, :java => true) do |context|
+  context.timeout_limit = 1.5 # seconds
+  context.eval %Q{
+    for (var i = 0; i < 100; i++) {
+      java.lang.Thread.sleep(100);
+    }
+  } # => Rhino::ScriptTimeoutError
+end
 ```
 
-### Loading JavaScript source
+### Loading JavaScript Source
 
 In addition to just evaluating strings, you can also use streams such as files:
 
@@ -135,40 +135,40 @@ https://github.com/cowboyd/therubyracer/wiki/Accessing-Ruby-Objects-From-JavaScr
 Thus you end-up calling arbitrary no-arg methods as if they were JavaScript properties,
 since instance accessors (properties) and methods (functions) are indistinguishable:
 ```ruby
-  Rhino::Context.open do |context|
-    context['Time'] = Time
-    context.eval('Time.now')
-  end
+Rhino::Context.open do |context|
+  context['Time'] = Time
+  context.eval('Time.now')
+end
 ```
 
 However, you can customize this behavior and there's another access implementation
 that attempts to mirror only attributes as properties as close as possible:
 ```ruby
-  class Foo
-    attr_accessor :bar
+class Foo
+  attr_accessor :bar
 
-    def initialize
-      @bar = "bar"
-    end
-
-    def check_bar
-      bar == "bar"
-    end
+  def initialize
+    @bar = "bar"
   end
 
-  Rhino::Ruby::Scriptable.access = :attribute
-  Rhino::Context.open do |context|
-    context['Foo'] = Foo
-    context.eval('var foo = new Foo()')
-    context.eval('foo.bar') # get property using reader
-    context.eval('foo.bar = null') # set property using writer
-    context.eval('foo.check_bar()') # called like a function
+  def check_bar
+    bar == "bar"
   end
+end
+
+Rhino::Ruby::Scriptable.access = :attribute
+Rhino::Context.open do |context|
+  context['Foo'] = Foo
+  context.eval('var foo = new Foo()')
+  context.eval('foo.bar') # get property using reader
+  context.eval('foo.bar = null') # set property using writer
+  context.eval('foo.check_bar()') # called like a function
+end
 ```
 
 If you happen to come up with your own access strategy, just set it directly :
 ```ruby
-  Rhino::Ruby::Scriptable.access = FooApp::BarAccess.instance
+Rhino::Ruby::Scriptable.access = FooApp::BarAccess.instance
 ```
 
 ## Safe by default
@@ -181,26 +181,21 @@ functions. Nothing from the Ruby world is accessible.
 For Ruby objects that you explicitly embed into JavaScript, only the +public+
 methods "defined in their classes" are exposed by default e.g.
 ```ruby
-  class A
-    def a
-      "a"
-    end
-  end
+class A
+  def a; 'a'; end
+end
 
-  class B < A
-    def b
-      "b"
-    end
-  end
+class B < A
+  def b; 'b'; end
+end
 
-
-  Rhino::Context.open do |cxt|
-    cxt['a'] = A.new
-    cxt['b'] = B.new
-    cxt.eval("a.a()") # => 'a'
-    cxt.eval("b.b()") # => 'b'
-    cxt.eval("b.a()") # => 'TypeError: undefined property 'a' is not a function'
-  end
+Rhino::Context.open do |context|
+  context['a'] = A.new
+  context['b'] = B.new
+  context.eval("a.a()") # => 'a'
+  context.eval("b.b()") # => 'b'
+  context.eval("b.a()") # => 'TypeError: undefined property 'a' is not a function'
+end
 ```
 
 ## Context Customizations
@@ -213,8 +208,8 @@ using system properties e.g. to force interpreted mode :
 
 You might also set these programatically as a default for all created contexts :
 ```ruby
-  Rhino::Context.default_optimization_level = 1
-  Rhino::Context.default_javascript_version = 1.6
+Rhino::Context.default_optimization_level = 1
+Rhino::Context.default_javascript_version = 1.6
 ```
 
 Or using plain old JAVA_OPTS e.g. when setting JavaScript version :
@@ -234,11 +229,11 @@ Officially supported versions of Rhino's _js.jar_ are packaged separately as
 feel like missing something available with Rhino. For experimenters the jar can
 be overriden by defining a `Rhino::JAR_PATH` before `require 'rhino'` e.g. :
 ```ruby
-  module Rhino
-    JAR_PATH = File.expand_path('lib/rhino/build/rhino1_7R5pre/js.jar')
-  end
-  # ...
-  require 'rhino'
+module Rhino
+  JAR_PATH = File.expand_path('lib/rhino/build/rhino1_7R5pre/js.jar')
+end
+# ...
+require 'rhino'
 ```
 
 ## LICENSE:
