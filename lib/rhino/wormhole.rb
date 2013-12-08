@@ -1,7 +1,7 @@
 
 module Rhino
   module To
-    
+
     def to_ruby(object)
       case object
       when JS::Scriptable::NOT_FOUND, JS::Undefined then nil
@@ -33,13 +33,13 @@ module Rhino
     def args_to_ruby(args)
       args.map { |arg| to_ruby(arg) }
     end
-    
+
     def args_to_javascript(args, scope = nil)
       args.map { |arg| to_javascript(arg, scope) }.to_java
     end
-    
+
     private
-    
+
       def array_to_ruby(js_array)
         js_array.length.times.map { |i| to_ruby( js_array.get(i, js_array) ) }
       end
@@ -60,7 +60,7 @@ module Rhino
       end
 
       def hash_to_javascript(rb_hash, scope = nil)
-        js_object = 
+        js_object =
           if scope && context = JS::Context.getCurrentContext
             context.newObject(scope)
           else
@@ -68,29 +68,27 @@ module Rhino
           end
         # JS::NativeObject implements Map put it's #put does :
         # throw new UnsupportedOperationException(); thus no []=
-        rb_hash.each_pair do |key, val| 
+        rb_hash.each_pair do |key, val|
           js_val = to_javascript(val, scope)
           JS::ScriptableObject.putProperty(js_object, key.to_s, js_val)
         end
         js_object
       end
-    
+
       def time_to_javascript(time, scope = nil)
         millis = time.to_f * 1000
         if scope && context = JS::Context.getCurrentContext
           JS::ScriptRuntime.newObject(context, scope, 'Date', [ millis ].to_java)
         else
           # the pure reflection way - god I love Java's private :
-          js_klass = JS::NativeObject.java_class
-          new = js_klass.getDeclaredConstructor
-          new.setAccessible(true)
+          js_klass = JS::NativeObject.java_class.to_java
+          new = js_klass.getDeclaredConstructor; new.setAccessible(true)
           js_date = new.newInstance
-          date = js_klass.getDeclaredField(:date)
-          date.setAccessible(true)
+          date = js_klass.getDeclaredField(:date); date.setAccessible(true)
           date.setDouble(js_date, millis)
           js_date
         end
       end
-      
+
   end
 end
