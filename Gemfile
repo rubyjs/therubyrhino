@@ -17,5 +17,5 @@ group :test do
   gem 'less', '>= 2.2.1', :require => nil
 end
 
-gem 'rake', :group => :development
-gem 'jruby-openssl', :group => :development
+gem 'rake', :require => false, :group => :development
+gem 'jruby-openssl', :group => :development if JRUBY_VERSION < '1.7'
