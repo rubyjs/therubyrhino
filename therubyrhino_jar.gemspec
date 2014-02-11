@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
 
   s.summary     = "Rhino's jars packed for therubyrhino"
   s.description = %q{Rhino's js.jar classes packaged as a JRuby gem.}
+  s.license = "MPL-2.0"
 
   s.homepage = %q{http://github.com/cowboyd/therubyrhino}
   s.rubyforge_project = %q{therubyrhino}

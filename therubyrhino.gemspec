@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://github.com/cowboyd/therubyrhino}
   s.rubyforge_project = %q{therubyrhino}
   s.extra_rdoc_files = ["README.md"]
+  s.license = "MIT"
 
   s.require_paths = ["lib"]
   s.files = `git ls-files`.split("\n").sort.
