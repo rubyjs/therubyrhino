@@ -1,9 +1,7 @@
 require 'bundler/setup'
 
 require 'rspec/core/rake_task'
-RSpec::Core::RakeTask.new do |spec|
-  spec.rspec_opts = ['--color', "--format documentation"]
-end
+RSpec::Core::RakeTask.new
 
 task :default => :spec
 

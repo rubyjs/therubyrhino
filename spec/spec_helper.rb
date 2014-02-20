@@ -35,4 +35,5 @@ end
 RSpec.configure do |config|
   config.filter_run_excluding :compat => /(0.5.0)|(0.6.0)/ # RedJS
   config.include Rhino::SpecHelpers
+  config.deprecation_stream = 'spec/deprecations.log'
 end

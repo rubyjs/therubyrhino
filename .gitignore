@@ -5,3 +5,4 @@ doc
 .rvmrc
 .bundle
 Gemfile.lock
+spec/deprecations.log

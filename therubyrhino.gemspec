@@ -20,6 +20,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency "therubyrhino_jar", '>= 1.7.3'
 
-  s.add_development_dependency "rspec", "~> 2.13.0"
+  s.add_development_dependency "rspec", "~> 2.14.1"
   s.add_development_dependency "mocha", "~> 0.13.3"
 end

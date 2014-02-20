@@ -61,7 +61,7 @@ Rhino::Context.open do |context|
 end
 ```
 
-* make a Ruby object *be* your JavaScript environment
+* make a Ruby object be your JavaScript environment
 ```ruby
 math = MyMath.new
 Rhino::Context.open(:with => math) do |context|
