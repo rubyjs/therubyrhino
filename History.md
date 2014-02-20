@@ -1,3 +1,9 @@
+## 2.0.3 2014-02-20
+
+* minor fix for time_to_js when scope not set (#27)
+* Jar path now avoids using a glob, which doesn't work inside a jar (#26)
+* use Rhino.warn explicitly otherwise it's a Kernel.warn
+
 ## 2.0.2 2012-12-05
 
 * handle Rhino's 64K code generation (method) limit on the fly (#23)
