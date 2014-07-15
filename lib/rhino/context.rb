@@ -46,23 +46,23 @@ module Rhino
       def eval(javascript)
         new.eval(javascript)
       end
-      
+
     end
-    
+
     @@default_factory = nil
     def self.default_factory
       @@default_factory ||= ContextFactory.new
     end
-    
+
     def self.default_factory=(factory)
       @@default_factory = factory
     end
-    
+
     @@default_optimization_level = java.lang.Integer.getInteger('rhino.opt.level')
     def self.default_optimization_level
       @@default_optimization_level
     end
-    
+
     def self.default_optimization_level=(level)
       @@default_optimization_level = level
     end
@@ -71,35 +71,22 @@ module Rhino
     def self.default_javascript_version
       @@default_javascript_version
     end
-    
+
     def self.default_javascript_version=(version)
       @@default_javascript_version = version
     end
 
     attr_reader :scope
-    
+
     # Create a new javascript environment for executing javascript and ruby code.
     # * <tt>:sealed</tt> - if this is true, then the standard objects such as Object, Function, Array will not be able to be modified
     # * <tt>:with</tt> - use this ruby object as the root scope for all javascript that is evaluated
     # * <tt>:java</tt> - if true, java packages will be accessible from within javascript
     def initialize(options = {}) #:nodoc:
-      factory = options[:factory] || 
+      factory = options[:factory] ||
         (options[:restrictable] ? RestrictableContextFactory.instance : self.class.default_factory)
-      factory.call do |context|
-        @native = context
-        @global = @native.initStandardObjects(nil, options[:sealed] == true)
-        if with = options[:with]
-          @scope = Rhino.to_javascript(with)
-          @scope.setParentScope(@global)
-        else
-          @scope = @global
-        end
-        unless options[:java]
-          for package in ["Packages", "java", "javax", "org", "com", "edu", "net"]
-            @global.delete(package)
-          end
-        end
-      end
+      @options = options
+      factory.call(self) # org.mozilla.javascript.ContextAction (invokes #run)
       if optimization_level = options[:optimization_level] || self.class.default_optimization_level
         self.optimization_level = optimization_level
       end
@@ -108,12 +95,32 @@ module Rhino
       end
       yield(self) if block_given?
     end
-    
+
+    include JS::ContextAction
+
+    # org.mozilla.javascript.ContextAction public Object run(Context context);
+    def run(context) # :nodoc:
+      @native = context
+      @global = @native.initStandardObjects(nil, @options[:sealed] == true)
+      if with = @options[:with]
+        @scope = Rhino.to_javascript(with)
+        @scope.setParentScope(@global)
+      else
+        @scope = @global
+      end
+      unless @options[:java]
+        @global.delete('Packages')
+        @global.delete('java'); @global.delete('javax')
+        @global.delete('org'); @global.delete('com')
+        @global.delete('edu'); @global.delete('net')
+      end
+    end
+
     # Returns the ContextFactory used while creating this context.
     def factory
       @native.getFactory
     end
-    
+
     # Read a value from the global scope of this context
     def [](key)
       @scope[key]
@@ -139,7 +146,7 @@ module Rhino
         Rhino.to_ruby(result)
       end
     end
-    
+
     def evaluate(*args) # :nodoc:
       eval(*args) # an alias
     end
@@ -161,11 +168,11 @@ module Rhino
     def restrictable?
       @native.is_a?(RestrictableContextFactory::Context)
     end
-    
+
     def instruction_limit
       restrictable? ? @native.instruction_limit : false
     end
-    
+
     # Set the maximum number of instructions that this context will execute.
     # If this instruction limit is exceeded, then a #Rhino::RunawayScriptError
     # will be raised.
@@ -173,7 +180,7 @@ module Rhino
       if restrictable?
         @native.instruction_limit = limit
       else
-        raise "setting an instruction_limit has no effect on this context, use " + 
+        raise "setting an instruction_limit has no effect on this context, use " <<
               "Context.open(:restrictable => true) to gain a restrictable instance"
       end
     end
@@ -181,7 +188,7 @@ module Rhino
     def timeout_limit
       restrictable? ? @native.timeout_limit : false
     end
-    
+
     # Set the duration (in seconds e.g. 1.5) this context is allowed to execute.
     # After the timeout passes (no matter if any JS has been evaluated) and this
     # context is still attempted to run code, a #Rhino::ScriptTimeoutError will
@@ -190,15 +197,15 @@ module Rhino
       if restrictable?
         @native.timeout_limit = limit
       else
-        raise "setting an timeout_limit has no effect on this context, use " + 
+        raise "setting an timeout_limit has no effect on this context, use " <<
               "Context.open(:restrictable => true) to gain a restrictable instance"
       end
     end
-    
+
     def optimization_level
       @native.getOptimizationLevel
     end
-    
+
     # Set the optimization level that this context will use. This is sometimes necessary
     # in Rhino, if the bytecode size of the compiled javascript exceeds the 64KB limit.
     # By using the -1 optimization level, you tell Rhino to run in interpretative mode,
@@ -213,7 +220,7 @@ module Rhino
       end
     end
 
-    # Get the JS interpreter version. 
+    # Get the JS interpreter version.
     # Returns a number e.g. 1.7, nil if unknown and 0 for default.
     def javascript_version
       case const_value = @native.getLanguageVersion
@@ -223,7 +230,7 @@ module Rhino
       end
     end
     alias :version :javascript_version
-    
+
     # Sets interpreter mode a.k.a. JS language version e.g. 1.7 (if supported).
     def javascript_version=(version)
       const = version.to_s.gsub('.', '_').upcase
@@ -237,9 +244,9 @@ module Rhino
         nil
       end
     end
-    alias :version= :javascript_version= 
-    
-    # Enter this context for operations. 
+    alias :version= :javascript_version=
+
+    # Enter this context for operations.
     # Some methods such as eval() will fail unless the context is open.
     def open(&block)
       do_open(&block)
@@ -251,9 +258,9 @@ module Rhino
       end
       raise Rhino::JSError.new(e)
     end
-    
+
     private
-    
+
     def do_open # :nodoc
       factory.enterContext(@native)
       begin
@@ -262,7 +269,7 @@ module Rhino
         factory.exit
       end
     end
-    
+
     CODE_GENERATION_ERROR_MESSAGE = 'generated bytecode for method exceeds 64K limit' # :nodoc
 
     CODE_GENERATION_TRACE_CLASS_NAME = 'org.mozilla.javascript.optimizer.Codegen' # :nodoc
@@ -316,7 +323,7 @@ module Rhino
         return jstr.length
       end
     end
-    
+
   end
 
   ContextFactory = JS::ContextFactory # :nodoc: backward compatibility
@@ -327,24 +334,24 @@ module Rhino
     def self.instance
       @@instance ||= new
     end
-    
+
     # protected Context makeContext()
     def makeContext
       Context.new(self)
     end
-    
+
     # protected void observeInstructionCount(Context context, int instructionCount)
     def observeInstructionCount(context, count)
       context.check!(count) if context.is_a?(Context)
     end
-    
-    # protected Object doTopCall(Callable callable, Context context, 
+
+    # protected Object doTopCall(Callable callable, Context context,
     #                            Scriptable scope, Scriptable thisObj, Object[] args)
     def doTopCall(callable, context, scope, this, args)
       context.reset! if context.is_a?(Context)
       super
     end
-    
+
     class Context < JS::Context # :nodoc:
 
       def initialize(factory)
@@ -353,7 +360,7 @@ module Rhino
       end
 
       attr_reader :instruction_limit
-      
+
       def instruction_limit=(limit)
         treshold = getInstructionObserverThreshold
         if limit && (treshold == 0 || treshold > limit)
@@ -363,11 +370,11 @@ module Rhino
       end
 
       attr_reader :instruction_count
-      
+
       TIMEOUT_INSTRUCTION_TRESHOLD = 42
-      
+
       attr_reader :timeout_limit
-      
+
       def timeout_limit=(limit) # in seconds
         treshold = getInstructionObserverThreshold
         if limit && (treshold == 0 || treshold > TIMEOUT_INSTRUCTION_TRESHOLD)
@@ -375,9 +382,9 @@ module Rhino
         end
         @timeout_limit = limit
       end
-      
+
       attr_reader :start_time
-      
+
       def check!(count = nil)
         @instruction_count += count if count
         check_instruction_limit!
@@ -389,7 +396,7 @@ module Rhino
           raise RunawayScriptError, "script exceeded allowable instruction count: #{instruction_limit}"
         end
       end
-      
+
       def check_timeout_limit!(count = nil)
         if timeout_limit
           elapsed_time = Time.now.to_f - start_time.to_f
@@ -410,17 +417,17 @@ module Rhino
           end
         end
       end
-      
+
       def reset!
         @instruction_count = 0
         @start_time = Time.now
         self
       end
-      
+
     end
-    
+
   end
-    
+
   class ContextError < StandardError # :nodoc:
   end
 
@@ -429,5 +436,5 @@ module Rhino
 
   class ScriptTimeoutError < ContextError # :nodoc:
   end
-  
+
 end
