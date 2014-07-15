@@ -1,40 +1,40 @@
 require File.expand_path('../spec_helper', File.dirname(__FILE__))
 
 describe Rhino::JSError do
-  
+
   it "works as a StandardError with a message being passed" do
     js_error = Rhino::JSError.new 'an error message'
     lambda { js_error.to_s && js_error.inspect }.should_not raise_error
-    
+
     js_error.cause.should be nil
     js_error.message.should == 'an error message'
     js_error.javascript_backtrace.should be nil
   end
-  
+
   it "might wrap a RhinoException wrapped in a NativeException like error" do
     # JRuby's NativeException.new(rhino_e) does not work as it is
     # intended to handle Java exceptions ... no new on the Ruby side
     native_error_class = Class.new(RuntimeError) do
-      
+
       def initialize(cause)
         @cause = cause
       end
-      
+
       def cause
         @cause
       end
-      
+
     end
-    
+
     rhino_e = Rhino::JS::JavaScriptException.new("42".to_java)
     js_error = Rhino::JSError.new native_error_class.new(rhino_e)
     lambda { js_error.to_s && js_error.inspect }.should_not raise_error
-    
+
     js_error.cause.should be rhino_e
     js_error.message.should == '42'
     js_error.javascript_backtrace.should_not be nil
   end
-  
+
   it "keeps the thrown javascript object value" do
     begin
       Rhino::Context.eval "throw { foo: 'bar' }"
@@ -73,17 +73,17 @@ describe Rhino::JSError do
       fail "expected to rescue"
     end
   end
-  
+
   it "has a correct javascript backtrace" do
     begin
       Rhino::Context.eval "throw 42"
     rescue => e
+      # [ "at <eval>:1", "at org/mozilla/javascript/gen/<eval>:1" ]
       e.javascript_backtrace.should be_a Enumerable
-      e.javascript_backtrace.size.should == 1
+      e.javascript_backtrace.size.should >= 1
       e.javascript_backtrace[0].should == "at <eval>:1"
-      
       e.javascript_backtrace(true).should be_a Enumerable
-      e.javascript_backtrace(true).size.should == 1
+      e.javascript_backtrace(true).size.should >= 1
       element = e.javascript_backtrace(true)[0]
       element.file_name.should == '<eval>'
       element.function_name.should be nil
@@ -97,14 +97,14 @@ describe Rhino::JSError do
     begin
       Rhino::Context.eval "function fortyTwo() { throw 42 }\n fortyTwo()"
     rescue => e
-      e.javascript_backtrace.size.should == 2
+      e.javascript_backtrace.size.should >= 2
       e.javascript_backtrace[0].should == "at <eval>:1 (fortyTwo)"
-      e.javascript_backtrace[1].should == "at <eval>:2"
+      expect( e.javascript_backtrace.find { |trace| trace == "at <eval>:2" } ).to_not be nil
     else
       fail "expected to rescue"
     end
   end
-  
+
   it "backtrace starts with the javascript part" do
     begin
       Rhino::Context.eval "throw 42"
@@ -149,7 +149,7 @@ describe Rhino::JSError do
       fail "expected to rescue"
     end
   end
-  
+
   it "raises correct error from function#apply" do
     begin
       context = Rhino::Context.new
@@ -166,7 +166,7 @@ describe Rhino::JSError do
   it "prints info about nested (ruby) error" do
     context = Rhino::Context.new
     klass = Class.new do
-      def hello(arg = 42) 
+      def hello(arg = 42)
         raise RuntimeError, 'hello' if arg != 42
       end
     end
@@ -189,5 +189,5 @@ describe Rhino::JSError do
     #   from at hi (<eval>:1:28)
     #   from (irb):9
   end
-  
+
 end
