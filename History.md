@@ -1,3 +1,8 @@
+## jar-1.7.5 2015-04-29
+
+* updated to Mozilla's Rhino 1.7R5 release from 2015-01-29, notes:
+  https://github.com/mozilla/rhino/releases/tag/Rhino1_7R5_RELEASE
+
 ## 2.0.3 2014-02-20
 
 * minor fix for time_to_js when scope not set (#27)
