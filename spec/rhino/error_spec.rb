@@ -81,7 +81,7 @@ describe Rhino::JSError do
       # [ "at <eval>:1", "at org/mozilla/javascript/gen/<eval>:1" ]
       e.javascript_backtrace.should be_a Enumerable
       e.javascript_backtrace.size.should >= 1
-      e.javascript_backtrace[0].should == "at <eval>:1"
+      e.javascript_backtrace[0].should =~ /at .*?<eval>:1/
       e.javascript_backtrace(true).should be_a Enumerable
       e.javascript_backtrace(true).size.should >= 1
       element = e.javascript_backtrace(true)[0]
@@ -98,7 +98,7 @@ describe Rhino::JSError do
       Rhino::Context.eval "function fortyTwo() { throw 42 }\n fortyTwo()"
     rescue => e
       e.javascript_backtrace.size.should >= 2
-      e.javascript_backtrace[0].should == "at <eval>:1 (fortyTwo)"
+      e.javascript_backtrace[0].should =~ /at .*?<eval>:1 \(fortyTwo\)/
       expect( e.javascript_backtrace.find { |trace| trace == "at <eval>:2" } ).to_not be nil
     else
       fail "expected to rescue"
@@ -110,7 +110,7 @@ describe Rhino::JSError do
       Rhino::Context.eval "throw 42"
     rescue => e
       e.backtrace.should be_a Array
-      e.backtrace[0].should == "at <eval>:1"
+      e.backtrace[0].should =~ /at .*?<eval>:1/
       e.backtrace[1].should_not be nil
     else
       fail "expected to rescue"
