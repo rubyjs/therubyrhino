@@ -1,5 +1,11 @@
 # therubyrhino
 
+[![Gem Version](https://badge.fury.io/rb/therubyrhino.png)](http://badge.fury.io/rb/therubyrhino)
+[![Build Status](https://travis-ci.org/cowboyd/therubyrhino.png?branch=master)](https://travis-ci.org/cowboyd/therubyrhino)
+[![Build status](https://ci.appveyor.com/api/projects/status/aqw06doke164dca7?svg=true)](https://ci.appveyor.com/project/cowboyd/therubyrhino)
+[![Dependency Status](https://gemnasium.com/cowboyd/therubyrhino.png)](https://gemnasium.com/cowboyd/therubyrhino)
+[![Join the chat at https://gitter.im/cowboyd/therubyracer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cowboyd/therubyracer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Embed the Mozilla Rhino JavaScript interpreter into Ruby
 
 ## REQUIREMENTS:
