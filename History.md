@@ -1,3 +1,8 @@
+## jar-1.7.7 2015-09-16
+
+* updated to Mozilla's Rhino 1.7R7 release from 2015-06-17, notes:
+  https://github.com/mozilla/rhino/releases/tag/Rhino1_7_7_RELEASE
+
 ## jar-1.7.6 2015-04-29
 
 * updated to Mozilla's Rhino 1.7R5 release from 2015-04-15, notes:
