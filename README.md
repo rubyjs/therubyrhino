@@ -48,7 +48,7 @@ end
 ```ruby
 Rhino::Context.open do |context|
   context["say"] = lambda {|word, times| word * times}
-  context.eval("say("Hello", 3)") #=> HelloHelloHello
+  context.eval("say('Hello', 3)") #=> HelloHelloHello
 end
 ```
 
