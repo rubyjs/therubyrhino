@@ -1,8 +1,7 @@
 # therubyrhino
 
 [![Gem Version](https://badge.fury.io/rb/therubyrhino.svg)](http://badge.fury.io/rb/therubyrhino)
-[![Build Status](https://travis-ci.org/cowboyd/therubyrhino.svg?branch=master)](https://travis-ci.org/cowboyd/therubyrhino)
-[![Dependency Status](https://gemnasium.com/cowboyd/therubyrhino.svg)](https://gemnasium.com/cowboyd/therubyrhino)
+[![Build Status](https://travis-ci.org/rubyjs/therubyrhino.svg?branch=master)](https://travis-ci.org/rubyjs/therubyrhino)
 [![Join the chat at https://gitter.im/cowboyd/therubyracer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cowboyd/therubyracer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Embed the Mozilla Rhino JavaScript interpreter into Ruby
