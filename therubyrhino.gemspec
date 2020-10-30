@@ -11,7 +11,6 @@ Gem::Specification.new do |s|
   s.summary = %q{Embed the Rhino JavaScript interpreter into JRuby}
   s.description = %q{Call javascript code and manipulate javascript objects from ruby. Call ruby code and manipulate ruby objects from javascript.}
   s.homepage = %q{http://github.com/cowboyd/therubyrhino}
-  s.rubyforge_project = %q{therubyrhino}
   s.extra_rdoc_files = ["README.md"]
   s.license = "MIT"
 

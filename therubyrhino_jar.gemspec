@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
   s.license = "MPL-2.0"
 
   s.homepage = %q{http://github.com/cowboyd/therubyrhino}
-  s.rubyforge_project = %q{therubyrhino}
 
   s.require_paths = ["jar"]
   s.files = `git ls-files`.split("\n").sort.
